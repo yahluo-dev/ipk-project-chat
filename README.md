@@ -1,3 +1,6 @@
 # IPK-Project-1
 
-IPK first project 2024
+## Class diagram
+
+![alt text](./doc/class.mmd.png)
+*UML Class diagram describing the design of the client*
