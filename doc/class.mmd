@@ -1,0 +1,121 @@
+%%{init: { "class": { "height": 300, "width": 300 } } }%%
+classDiagram
+
+  class Client {
+    +repl()
+  }
+  
+  class UDPClient {
+
+  }
+
+  class Session {
+    -string username
+    -string displayname
+    -int socket
+    -sockaddr_in server
+    +auth(uname: string,dispname: string,secret: string)
+    +sendtext(text: string)
+  }
+
+  class TCPSession {
+  %%TODO
+  }
+
+  class UDPSession {
+  %%TODO
+  }
+
+  class Server {
+    +get_msg()
+    +send_msg(m: Message)
+  }
+
+  class TCPServer {
+  %%TODO
+  }
+
+  class UDPServer {
+  %%TODO
+  }
+
+  class AbstractFactory {
+    +build()
+  }
+
+  class MessageFactory {
+    %% TODO
+  }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MESSAGES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  class Message {
+    -int code
+    +msg_type_t get_type()
+  }
+
+  class AuthMessage {
+    -uint16_t message_id
+    -string username
+    -string displayname
+    -string secret
+  }
+
+  class ConfirmMessage {
+    -uint16_t ref_message_id
+  }
+
+  class ReplyMessage {
+    -uint16_t message_id
+    -uint8_t result
+    -uint16_t ref_message_id
+    -string message_contents
+  }
+
+  class JoinMessage {
+    -uint16_t message_id
+    -string channel_id
+    -string displayname
+  }
+
+  class MsgMessage {
+    -uint16_t message_id
+    -string displayname
+    -string message_contents
+  }
+
+  class ErrMessage { %% FIXME: Same as Msg?
+    -uint16_t message_id
+    -string displayname
+    -string message_contents
+  }
+
+  class ByeMessage {
+    -uint16_t message_id
+  }
+
+  <<Abstract>> Session
+  Session <|-- TCPSession
+  Session <|-- UDPSession
+
+  <<Abstract>> Server
+  Server <|-- TCPServer
+  Server <|-- UDPServer
+
+  <<Abstract>> Message
+  Message <|-- AuthMessage
+  Message <|-- ConfirmMessage
+  Message <|-- ReplyMessage
+  Message <|-- JoinMessage
+  Message <|-- MsgMessage
+  Message <|-- ErrMessage
+  Message <|-- ByeMessage
+
+  <<Abstract>> AbstractFactory
+  AbstractFactory <|-- MessageFactory
+
+  <<Abstract>> Client
+
+  Client <|-- UDPClient
