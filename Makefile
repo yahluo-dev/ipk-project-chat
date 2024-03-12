@@ -37,10 +37,13 @@ message.o: message.cpp
 message_factory.o: message_factory.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
-ipk24-chat-tests.out: test/test_main.o message_factory.o message.o
+ipk24-chat-tests.out: test/test_main.o test/message_serialize_tests.o message_factory.o message.o 
 	$(CXX) $(CXXFLAGS) -lgtest $^ -o $@
 
 test/test_main.o: test/test_main.cpp
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
+
+test/message_serialize_tests.o: test/message_serialize_tests.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
 clean:
