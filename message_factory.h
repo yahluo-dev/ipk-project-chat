@@ -4,5 +4,5 @@
 class MessageFactory : public AbstractFactory
 {
   public:
-    Message create(std::string message);
+    Message *create(std::string message);
 };

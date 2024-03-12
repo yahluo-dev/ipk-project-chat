@@ -12,15 +12,14 @@ enum message_code_t
   CODE_BYE = 0xFF
 };
 
-// Flexible members are not a part of any C++ standard,
-// this is not standard C++ code.
-extern "C" {
-
 // Generic message struct
 typedef struct
 {
   uint8_t code;
-  char message_data[];
+  char message_data[1]; // This is actually used as a flexible member,
+                        // but the C++ standard doesn't allow them 
+                        // and the compiler will complain, hence [1].
+                        // FIXME: think of something better.
 } message_t;
 
 typedef struct
@@ -35,7 +34,7 @@ typedef struct
   uint16_t message_id;
   uint8_t result;
   uint16_t ref_message_id;
-  char message_contents[];
+  char message_contents[1];
 
 } reply_message_t;
 
@@ -43,7 +42,7 @@ typedef struct
 {
   uint8_t code;
   uint16_t message_id;
-  char data[];
+  char data[1];
 
 } auth_message_t;
 
@@ -59,85 +58,84 @@ typedef struct
   uint16_t message_id;
 } bye_message_t;
 
-}
 
 class Message
 {
   protected:
     uint8_t code;
   public:
-    std::string serialize();
+    virtual std::string serialize();
 };
 
 class ConfirmMessage : public Message
 {
   private:
-    uint16_t ref_messageid;
   public:
-    ConfirmMessage(uint16_t _ref_messageid);
+    uint16_t ref_message_id;
+    ConfirmMessage(uint16_t _ref_message_id);
 };
 
 class ReplyMessage : public Message
 {
   private:
+  public:
     uint16_t message_id;
     uint8_t result;
-    uint16_t ref_messageid;
+    uint16_t ref_message_id;
     std::string message_contents;
-  public:
-    ReplyMessage(uint16_t _message_id, uint8_t _result, uint16_t _ref_messageid,
+    ReplyMessage(uint16_t _message_id, uint8_t _result, uint16_t _ref_message_id,
         std::string _message_contents);
 };
 
 class AuthMessage : public Message
 {
   private:
+  public:
     std::string username;
     std::string secret;
-    std::string displayname;
+    std::string display_name;
     uint16_t message_id;
-  public:
     AuthMessage(std::string _username, 
-        std::string _secret, std::string _displayname, uint16_t _message_id);
+        std::string _secret, std::string _display_name, uint16_t _message_id);
     std::string serialize();
 };
 
 class JoinMessage : public Message
 {
   private:
+  public:
     uint16_t message_id;
     std::string channel_id;
-    std::string displayname;
-  public:
-    JoinMessage(uint16_t _message_id, std::string _channel_id, std::string _displayname);
+    std::string display_name;
+    JoinMessage(uint16_t _message_id, std::string _channel_id, std::string _display_name);
 };
 
 class MsgMessage : public Message
 {
   private:
-    uint16_t message_id;
-    std::string displayname;
-    std::string message_contents;
   public:
-    MsgMessage(uint16_t _message_id, std::string _displayname,
+    uint16_t message_id;
+    std::string display_name;
+    std::string message_contents;
+    MsgMessage(uint16_t _message_id, std::string _display_name,
         std::string _message_contents);
 };
 
 class ErrMessage : public Message
 {
   private:
-    uint16_t message_id;
-    std::string displayname;
-    std::string message_contents;
   public:
-    ErrMessage(uint16_t _message_id, std::string _displayname,
+    uint16_t message_id;
+    std::string display_name;
+    std::string message_contents;
+    ErrMessage(uint16_t _message_id, std::string _display_name,
         std::string _message_contents);
 };
 
 class ByeMessage : public Message
 {
   private:
-    uint16_t message_id;
   public:
+    uint16_t message_id;
     ByeMessage(uint16_t _message_id);
 };

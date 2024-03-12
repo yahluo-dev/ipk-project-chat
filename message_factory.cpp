@@ -1,5 +1,6 @@
 #include "message_factory.h"
 #include <vector>
+#include <stdexcept>
 
 // TODO: There will be received and sent messages.
 // For sent ones it would be good to specify only the parameters and some class would 
@@ -30,62 +31,68 @@ std::vector<std::string> parse_null_terminated_data(char *raw_data, int n_fields
   return vec;
 }
 
-Message MessageFactory::create(std::string message)
+Message *MessageFactory::create(std::string message)
 {
-  message_t *generic_message = (message_t *)message.data();
+  uint8_t code;
+  char *generic_message = message.data();
+  size_t message_size = message.size();
 
-  switch(generic_message->code)
+  // Packet code
+  code = *(uint8_t *)generic_message;
+  generic_message++;
+
+  switch(code)
   {
     case CODE_CONFIRM:
     {
-      confirm_message_t *msg = (confirm_message_t *)generic_message;
-      return ConfirmMessage(msg->ref_message_id);
+      uint16_t ref_message_id = *(uint16_t *)generic_message;
+      generic_message += sizeof(uint16_t);
+
+      return new ConfirmMessage(ref_message_id);
     }
     case CODE_REPLY:
     {
-      reply_message_t *msg = (reply_message_t *)generic_message;
-      auto data_fields = parse_null_terminated_data(msg->message_contents, 1);
+      uint16_t message_id = *(uint16_t *)generic_message;
+      generic_message += sizeof(uint16_t);
+      uint8_t result = *(uint8_t *)generic_message;
+      generic_message += sizeof(uint8_t);
+      uint16_t ref_message_id = *(uint16_t *)generic_message;
+      generic_message += sizeof(uint16_t);
+      auto data_fields = parse_null_terminated_data(generic_message, 1);
       std::string message_contents = data_fields[0];
-      return ReplyMessage(msg->message_id, msg->result, msg->message_id,
+
+      return new ReplyMessage(message_id, result, ref_message_id,
           message_contents);
-    }
-    case CODE_AUTH:
-    {
-      auth_message_t *msg = (auth_message_t *)generic_message;
-      auto data_fields = parse_null_terminated_data(msg->data, 3);
-      std::string username = data_fields[0];
-      std::string displayname = data_fields[1];
-      std::string secret = data_fields[2];
-      return AuthMessage(username, secret, displayname, msg->message_id);
-    }
-    case CODE_JOIN:
-    {
-      join_message_t *msg = (join_message_t *)generic_message;
-      auto data_fields = parse_null_terminated_data(msg->data, 2);
-      std::string channel_id = data_fields[0];
-      std::string displayname = data_fields[1];
-      return JoinMessage(msg->message_id, channel_id, displayname);
     }
     case CODE_MSG:
     {
-      msg_message_t *msg = (msg_message_t *)generic_message;
-      auto data_fields = parse_null_terminated_data(msg->data, 2);
+      uint16_t message_id = *(uint16_t *)generic_message;
+      generic_message += sizeof(uint16_t);
+
+      auto data_fields = parse_null_terminated_data(generic_message, 2);
       std::string displayname = data_fields[0];
       std::string message_contents = data_fields[1];
-      return MsgMessage(msg->message_id, displayname, message_contents);
+      return new MsgMessage(message_id, displayname, message_contents);
     }
     case CODE_ERR:
     {
-      err_message_t *msg = (err_message_t *)generic_message;
-      auto data_fields = parse_null_terminated_data(msg->data, 2);
+      uint16_t message_id = *(uint16_t *)generic_message;
+      generic_message += sizeof(uint16_t);
+
+      auto data_fields = parse_null_terminated_data(generic_message, 2);
       std::string displayname = data_fields[0];
       std::string message_contents = data_fields[1];
-      return ErrMessage(msg->message_id, displayname, message_contents);
+      return new ErrMessage(message_id, displayname, message_contents);
     }
     case CODE_BYE:
     {
-      bye_message_t *msg = (bye_message_t *)generic_message;
-      return ByeMessage(msg->message_id);
+      uint16_t message_id = *(uint16_t *)generic_message;
+      generic_message += sizeof(uint16_t);
+      return new ByeMessage(message_id);
+    }
+    default:
+    {
+      throw new std::invalid_argument("Packet with unexpected code received.");
     }
   }
 }
