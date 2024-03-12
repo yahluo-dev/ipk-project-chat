@@ -1,6 +1,7 @@
 #include "message.h"
 #include <cstring>
 #include "exception.h"
+#include <arpa/inet.h>
 
 std::string Message::serialize()
 {
@@ -11,6 +12,13 @@ ConfirmMessage::ConfirmMessage(uint16_t _ref_message_id)
 {
   code = CODE_CONFIRM;
   ref_message_id = _ref_message_id;
+}
+std::string ConfirmMessage::serialize()
+{
+  std::string binary_message = std::string(1u, CODE_CONFIRM);
+  binary_message += std::string((char *)&ref_message_id, sizeof(uint16_t));
+
+  return binary_message;
 }
 
 AuthMessage::AuthMessage(std::string _username, 

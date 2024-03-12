@@ -73,6 +73,7 @@ class ConfirmMessage : public Message
   public:
     uint16_t ref_message_id;
     ConfirmMessage(uint16_t _ref_message_id);
+    std::string serialize();
 };
 
 class ReplyMessage : public Message
