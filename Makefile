@@ -1,4 +1,7 @@
-debug_flags=-Wall -Wenum-compare -Wenum-conversion -Wpedantic -ggdb
+debug_flags=-Wall -Wenum-compare -Wenum-conversion -Wpedantic -ggdb -O0
+
+test: CXXFLAGS += $(debug_flags)
+test: ipk24-chat-tests.out
 
 all: debug
 
@@ -32,6 +35,13 @@ message.o: message.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
 message_factory.o: message_factory.cpp
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
+
+ipk24-chat-tests.out: test/test_main.o message_factory.o message.o
+	$(CXX) $(CXXFLAGS) -lgtest $^ -o $@
+
+test/test_main.o: test/test_main.cpp
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
 clean:
 	$(RM) *.o *.out
