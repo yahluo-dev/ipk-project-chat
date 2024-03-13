@@ -2,9 +2,11 @@
 #include <cstring>
 #include "exception.h"
 #include <arpa/inet.h>
+#include <iostream>
 
 std::string Message::serialize()
 {
+  std::cerr << "Virtual base method called!" << std::endl;
   throw new NotImplemented();
 }
 
@@ -31,6 +33,20 @@ AuthMessage::AuthMessage(std::string _username,
   message_id = _message_id;
 }
 
+std::string AuthMessage::serialize()
+{
+  std::string binary_message = std::string(1u, CODE_AUTH);
+  binary_message += std::string((char *)&message_id, sizeof(uint16_t));
+  binary_message += username;
+  binary_message += std::string(1u, '\x00');
+  binary_message += display_name;
+  binary_message += std::string(1u, '\x00');
+  binary_message += secret;
+  binary_message += std::string(1u, '\x00');
+
+  return binary_message;
+}
+
 ReplyMessage::ReplyMessage(uint16_t _message_id, uint8_t _result, uint16_t _ref_message_id,
     std::string _message_contents)
 {
@@ -50,6 +66,18 @@ JoinMessage::JoinMessage(uint16_t _message_id, std::string _channel_id,
   display_name = _display_name;
 }
 
+std::string JoinMessage::serialize()
+{
+  std::string binary_message = std::string(1u, CODE_JOIN);
+  binary_message += std::string((char *)&message_id, sizeof(uint16_t));
+  binary_message += channel_id;
+  binary_message += std::string(1u, '\x00');
+  binary_message += display_name;
+  binary_message += std::string(1u, '\x00');
+
+  return binary_message;
+}
+
 MsgMessage::MsgMessage(uint16_t _message_id, std::string _display_name,
     std::string _message_contents)
 {
@@ -57,6 +85,18 @@ MsgMessage::MsgMessage(uint16_t _message_id, std::string _display_name,
   message_id = _message_id;
   display_name = _display_name;
   message_contents = _message_contents;
+}
+
+std::string MsgMessage::serialize()
+{
+  std::string binary_message = std::string(1u, CODE_MSG);
+  binary_message += std::string((char *)&message_id, sizeof(uint16_t));
+  binary_message += display_name;
+  binary_message += std::string(1u, '\x00');
+  binary_message += message_contents;
+  binary_message += std::string(1u, '\x00');
+
+  return binary_message;
 }
 
 ErrMessage::ErrMessage(uint16_t _message_id, std::string _display_name,
@@ -74,7 +114,3 @@ ByeMessage::ByeMessage(uint16_t _message_id)
   message_id = _message_id;
 }
 
-std::string AuthMessage::serialize()
-{
-  throw new NotImplemented();
-}
