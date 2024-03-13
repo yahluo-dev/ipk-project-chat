@@ -1,9 +1,10 @@
 debug_flags=-Wall -Wenum-compare -Wenum-conversion -Wpedantic -ggdb -O0
 
+all: debug
+
 test: CXXFLAGS += $(debug_flags)
 test: ipk24-chat-tests.out
 
-all: debug
 
 gdb: all
 	gdb ipk24-chat.out

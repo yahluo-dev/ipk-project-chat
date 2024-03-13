@@ -22,7 +22,7 @@ TEST(MessageSerializeTests, SerializeAuth)
   expected += std::string("display_name\x00", 13);
   expected += std::string("user_secret\x00", 12);
 
-  AuthMessage *message = new AuthMessage("user123", "display_name", "user_secret", 0xbeef);
+  AuthMessage *message = new AuthMessage("user123", "user_secret", "display_name",  0xbeef);
 
   std::string serialized = message->serialize();
 

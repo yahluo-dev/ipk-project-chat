@@ -2,6 +2,8 @@
 #include "../message_factory.h"
 #include <string>
 
+// FIXME: Is the byte order correct?
+
 int main(int argc, char **argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
