@@ -1,6 +1,7 @@
 #include "message_factory.h"
 #include <vector>
 #include <stdexcept>
+#include <iostream>
 
 // TODO: There will be received and sent messages.
 // For sent ones it would be good to specify only the parameters and some class would 
@@ -47,6 +48,8 @@ Message *MessageFactory::create(std::string message)
     {
       uint16_t ref_message_id = *(uint16_t *)generic_message;
       generic_message += sizeof(uint16_t);
+      std::cerr << "DEBUG message_factory: ref_message_id "
+        << std::to_string(ref_message_id) << std::endl;
 
       return new ConfirmMessage(ref_message_id);
     }

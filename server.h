@@ -6,6 +6,9 @@ class UDPServer
   private:
     int sock;
   public:
+    UDPServer();
     UDPServer(int _sock);
-    void send_msg(Message *msg);
+    void sendmsg(Message *msg);
+    void send_expect_confirm(MessageWithId *msg);
+    Message *recvmsg();
 };

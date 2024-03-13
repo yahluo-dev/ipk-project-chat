@@ -57,6 +57,8 @@ UDPClient::UDPClient(addrinfo _server_addrinfo)
   std::cerr << "client: connecting to " 
     << inet_ntop(p->ai_family, get_in_addr(
           (struct sockaddr *)p->ai_addr), s, sizeof(s));
+
+  session = NULL;
 }
 
 void printVector(const std::vector<std::string>& vec) {
@@ -120,12 +122,15 @@ void UDPClient::repl()
           continue;
         }
 
-        Session *session = new Session(client_socket, username, secret, displayname);
+        Session *new_session = new Session(client_socket, username, secret, displayname);
 
-        if (0 != session->auth())
+        if (0 != new_session->auth())
         {
-          std::cerr << "Authentication failed!" << std::endl;
+          std::cerr << "Authentication failed." << std::endl;
         }
+        std::cerr << "Authentication success." << std::endl;
+
+        session = new_session;
       }
       else if (!command_args[0].compare("join"))
       {
@@ -179,9 +184,14 @@ void UDPClient::repl()
       if (!std::regex_match(input, message_content_regex))
       {
         std::cerr << "Invalid message content. Only characters from ASCII range \\x20-\\x7e are allowed." << std::endl;
-          continue;
-        session->sendmsg(input);
+        continue;
       }
+      if (NULL == session)
+      {
+        std::cerr << "You are not authenticated!" << std::endl;
+        continue;
+      }
+      session->sendmsg(input);
     }
   }
 }

@@ -9,7 +9,7 @@ class Session
     int client_socket;
     uint16_t message_id;
     std::string username, secret, displayname;
-    UDPServer *server;
+    UDPServer server;
   public:
     Session(int _client_socket, std::string _username, std::string _secret, std::string _displayname);
     virtual int sendmsg(std::string contents);
