@@ -22,7 +22,7 @@ int Session::sendmsg(std::string _contents)
 
   std::cout << "DEBUG: Sending message with contents" << " " << _contents << std::endl;
 
-  ConfirmMessage *expected_confirm = dynamic_cast<ConfirmMessage *>(server.recvmsg());
+  ConfirmMessage *expected_confirm = dynamic_cast<ConfirmMessage *>(server.get_msg());
 
   if (expected_confirm->code != CODE_CONFIRM ||
       expected_confirm->ref_message_id != message_id)
@@ -37,7 +37,22 @@ int Session::sendmsg(std::string _contents)
 
 int Session::join(std::string _channel_id, std::string _displayname)
 {
-  throw new NotImplemented();
+  MessageWithId *message = new JoinMessage(message_id, _channel_id, _displayname);
+  server.send_expect_confirm(message);
+
+  ReplyMessage *reply = static_cast<ReplyMessage *>(server.get_msg());
+
+  if (reply->ref_message_id != message->message_id)
+  {
+    std::cerr << "Got wrong message id. Response to an earlier message?" << std::endl;
+  }
+  if (1 != reply->result)
+  {
+    return 1;
+  }
+  return 0;
+
+  message_id++;
 }
 
 int Session::rename(std::string _new_name)
@@ -51,6 +66,15 @@ int Session::auth()
   MessageWithId *message = new AuthMessage(username, secret, displayname, message_id);
   server.send_expect_confirm(message);
 
+  ReplyMessage *reply = static_cast<ReplyMessage *>(server.get_msg());
+
+  if (reply->ref_message_id != message->message_id)
+  {
+    std::cerr << "Got wrong message id. Response to an earlier message?" << std::endl;
+  }
+  if (1 != reply->result)
+  {
+    return 1;
+  }
   return 0;
 }
-

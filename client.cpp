@@ -127,6 +127,7 @@ void UDPClient::repl()
         if (0 != new_session->auth())
         {
           std::cerr << "Authentication failed." << std::endl;
+          continue;
         }
         std::cerr << "Authentication success." << std::endl;
 

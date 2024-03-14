@@ -10,5 +10,5 @@ class UDPServer
     UDPServer(int _sock);
     void sendmsg(Message *msg);
     void send_expect_confirm(MessageWithId *msg);
-    Message *recvmsg();
+    Message *get_msg();
 };
