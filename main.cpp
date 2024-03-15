@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 
   UDPClient *client;
 
-  if (proto == UDP) client = new UDPClient(*result);
+  if (proto == UDP) client = new UDPClient(*result, udp_timeout, udp_max_retr);
   else if (proto == TCP)
   {
     throw new NotImplemented();

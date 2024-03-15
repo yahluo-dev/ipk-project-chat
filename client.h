@@ -16,6 +16,6 @@ class UDPClient
     int client_socket;
     struct addrinfo server_addrinfo;
   public:
-    UDPClient(struct addrinfo _server_addrinfo);
+    UDPClient(struct addrinfo _server_addrinfo, int timeout, int udp_max_retr);
     void repl();
 };

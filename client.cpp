@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <iterator>
+#include <sys/time.h>
 
 std::regex username_regex("[a-zA-Z0-9-]{1,20}", std::regex_constants::ECMAScript);
 std::regex secret_regex("[a-zA-Z0-9-]{1,128}", std::regex_constants::ECMAScript);
@@ -25,7 +26,7 @@ void *get_in_addr(struct sockaddr *sa)
   return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-UDPClient::UDPClient(addrinfo _server_addrinfo)
+UDPClient::UDPClient(addrinfo _server_addrinfo, int _timeout, int _udp_max_retr)
 {
   server_addrinfo = _server_addrinfo;
   char s[INET_ADDRSTRLEN];
@@ -39,6 +40,16 @@ UDPClient::UDPClient(addrinfo _server_addrinfo)
     {
       perror("client: socket");
       continue;
+    }
+
+    struct timeval timeout_val = {0};
+    timeout_val.tv_sec = _timeout / 1000;
+    timeout_val.tv_usec = (_timeout % 1000) * 1000; // in us
+
+    if (0 != setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, 
+        (void *)&timeout_val, sizeof(timeout_val)))
+    {
+      throw new std::runtime_error("setsockopt failed.");
     }
     if (-1 == connect(client_socket, p->ai_addr, p->ai_addrlen))
     {
