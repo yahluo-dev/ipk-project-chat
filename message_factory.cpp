@@ -3,22 +3,15 @@
 #include <stdexcept>
 #include <iostream>
 
-// TODO: There will be received and sent messages.
-// For sent ones it would be good to specify only the parameters and some class would 
-// serialize it.
-// For received messages I could create messages from a generic message struct, like I'm doing here.
-// Use templates?
-// serialize() method on messages?
+// TODO: Fix endianness of numbers (Must be BE when transmitting)
 
 /**
  * Create a new Message object from a generic struct message_t.
  */
 
-std::vector<std::string> parse_null_terminated_data(char *raw_data, int n_fields)
+std::vector<std::string> MessageFactory::parse_null_terminated_data(char *raw_data, int n_fields)
 {
   // FIXME: Might go beyond the packet end! Use std::string?
-
-  // Entering the realm of pointer arithmetic
 
   std::vector<std::string> vec;
 
@@ -36,7 +29,7 @@ Message *MessageFactory::create(std::string message)
 {
   uint8_t code;
   char *generic_message = message.data();
-  size_t message_size = message.size();
+  // size_t message_size = message.size();
 
   // Packet code
   code = *(uint8_t *)generic_message;
@@ -95,6 +88,7 @@ Message *MessageFactory::create(std::string message)
     }
     default:
     {
+      return new UnknownMessage(code);
       throw new std::invalid_argument("Packet with unexpected code received.");
     }
   }

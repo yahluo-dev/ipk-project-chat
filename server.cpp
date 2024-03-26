@@ -4,47 +4,87 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include "receiver.h"
+#include <condition_variable>
+#include <thread>
+#include "sender.h"
+
 
 #define RECVMESSAGE_MAXLEN 2048
+
+std::condition_variable got_message_cv;
 
 UDPServer::UDPServer()
 {
   sock = -1; // TODO: Remove this
+  // throw new std::logic_error("Should not get here.");
+  // We get here when creating a new instance of session...
 }
 
-UDPServer::UDPServer(int _sock)
+UDPServer::UDPServer(int _sock, int _max_retr, std::chrono::milliseconds _timeout)
 {
   sock = _sock;
+  max_retr = _max_retr;
+
+  receiving_thread = std::jthread(Receiver::receive, this, sock);
+  timeout = _timeout;
+
+  sender = new UDPSender(sock, max_retr, timeout, this);
+}
+
+void notify_send_success()
+{
+}
+
+void UDPServer::notify_incoming(Message *msg)
+{
+  if (msg->code == CODE_CONFIRM)
+  {
+    confirms.push_back(msg);
+    // notify of new confirm
+  }
+  else
+  {
+    inbox.push_back(msg);
+  }
 }
 
 /**
  * Send message
  */
-void UDPServer::sendmsg(Message *msg)
+void UDPServer::send_msg(Message *msg)
 {
-  std::string serialized = msg->serialize();
-  send(sock, serialized.data(), serialized.size(), 0);
+  sender->send_msg(msg);
 }
 
 /**
- * Send a message and expect a CONFIRM with the corresponding ref_message_id
+ * Check the message queue if got a confirm with this number
  */
-void UDPServer::send_expect_confirm(MessageWithId *msg)
+ConfirmMessage *UDPServer::check_got_confirm(uint16_t ref_message_id)
 {
-  std::string serialized = msg->serialize();
-  send(sock, serialized.data(), serialized.size(), 0);
-
-  ConfirmMessage *confirmation = dynamic_cast<ConfirmMessage *>(get_msg());
-
-  std::cout << "Message id: " << std::to_string(msg->message_id) << std::endl;
-
-  if (confirmation->code != CODE_CONFIRM ||
-      confirmation->ref_message_id != msg->message_id)
+  for (auto iter = inbox.begin(); iter != inbox.end();)
   {
-    std::cerr << "DEBUG: Got something unexpected..." << std::endl;
-    std::cout << "Got message with code " << std::to_string(confirmation->code) << std::endl;
-    std::cout << "\t...and ref_message_id " << std::to_string(confirmation->ref_message_id) << std::endl;
+    Message *msg = *iter;
+    if (msg->code != CODE_CONFIRM)
+      continue;
+    ConfirmMessage *confirmation = dynamic_cast<ConfirmMessage *>(msg);
+    if (confirmation->ref_message_id == ref_message_id)
+    {
+      return confirmation;
+    }
+    else if (confirmation->ref_message_id > ref_message_id)
+    {
+      throw new std::runtime_error("Got a confirm for a message not yet sent!");
+    }
+    else
+    {
+      iter = inbox.erase(iter);
+      continue; // Do not increment iterator, already erased
+    }
+
+    iter++;
   }
+  return NULL;
 }
 
 /**
@@ -68,7 +108,8 @@ Message *UDPServer::get_msg()
 
   if (-1 == (got_bytes = recvmsg(sock, &msg, 0)))
   {
-    throw new std::runtime_error("server: recvmsg failed");
+    return 0;
+    //throw new std::runtime_error("server: recvmsg failed");
   }
 
   std::string binary_message = std::string(buffer, got_bytes);

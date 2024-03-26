@@ -1,13 +1,21 @@
 #include "message.h"
-#include <cstring>
 #include "exception.h"
-#include <arpa/inet.h>
 #include <iostream>
 
 std::string Message::serialize()
 {
   std::cerr << "Virtual base method called!" << std::endl;
-  throw new NotImplemented();
+  throw NotImplemented();
+}
+
+Message::~Message() noexcept
+{
+}
+
+void Message::print()
+{
+  std::cerr << "Virtual base method called!" << std::endl;
+  throw NotImplemented();
 }
 
 ConfirmMessage::ConfirmMessage(uint16_t _ref_message_id)
@@ -99,6 +107,18 @@ std::string MsgMessage::serialize()
   return binary_message;
 }
 
+void MsgMessage::print()
+{
+  std::cout << message_id << " " << display_name << ": "
+    << message_contents << std::endl;
+}
+
+void ReplyMessage::print()
+{
+  std::cout << message_id << " " << result << " replying to " << ref_message_id << ": "
+    << message_contents << std::endl;
+}
+
 ErrMessage::ErrMessage(uint16_t _message_id, std::string _display_name,
     std::string _message_contents)
 {
@@ -114,3 +134,18 @@ ByeMessage::ByeMessage(uint16_t _message_id)
   message_id = _message_id;
 }
 
+UnknownMessage::UnknownMessage(uint8_t _message_code)
+{
+  code = _message_code;
+}
+
+MessageWithId::MessageWithId(message_code_t _code, int _message_id)
+{
+  code = _code;
+  message_id = _message_id;
+}
+
+MessageWithId::MessageWithId()
+{
+  message_id = -1;
+}

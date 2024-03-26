@@ -1,3 +1,6 @@
+#ifndef MAIN_H
+#define MAIN_H
+
 const char *USAGE = "ipk24-chat -t PROTOCOL -s HOSTNAME [-p PORT] [-d TIMEOUT] [-r MAX_UDP_RETR] [-h]\n"
                     "\t-t PROTOCOL\tTransport protocol used for connection (tcp/udp)\n"
                     "\t-s HOSTNAME\tServer IP or hostname\n"
@@ -12,3 +15,5 @@ enum Protocol
   UDP,
   TCP
 };
+
+#endif // MAIN_H

@@ -1,7 +1,5 @@
 #include <iostream>
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
 #include <unistd.h>
 #include <cstring>
 #include <netdb.h>
@@ -17,16 +15,16 @@ size_t message_id = 0;
 int main(int argc, char *argv[])
 {
   std::string port_number = DEFAULT_PORT;
-  std::string server_hostname = "";
+  std::string server_hostname;
   std::string proto_str;
 
   Protocol proto = NONE;
-  int udp_timeout = 250;
-  int udp_max_retr = 3;
-  int c, s;
+  unsigned int udp_timeout = 16000;
+  unsigned int udp_max_retr = 3;
+  int c;
 
-  struct addrinfo hints;
-  struct addrinfo *result;
+  struct addrinfo hints = {0};
+  struct addrinfo *result = nullptr;
   
   while ((c = getopt(argc, argv, "t:s:p:d:r:h")) != -1)
   {
@@ -35,11 +33,11 @@ int main(int argc, char *argv[])
       case 't':
         proto_str = optarg;
         std::transform(proto_str.begin(), proto_str.end(), proto_str.begin(), ::toupper);
-        if (!proto_str.compare("TCP")) proto = TCP;
-        else if (!proto_str.compare("UDP")) proto = UDP;
+        if (proto_str == "TCP") proto = TCP;
+        else if (proto_str == "UDP") proto = UDP;
         else
         {
-          std::cerr << "-t: Please supply either \"-t udp\" or \"-t tcp\"" << std::endl;
+          std::cerr << R"(-t: Please supply either "-t udp" or "-t tcp")" << std::endl;
           exit(1);
         }
         break;
@@ -55,19 +53,22 @@ int main(int argc, char *argv[])
         port_number = optarg;
         break;
       case 'd':
-        udp_timeout = strtol(optarg, NULL, 10);
+        udp_timeout = strtoul(optarg, nullptr, 10);
         break;
       case 'r':
-        udp_max_retr = strtol(optarg, NULL, 10);
+        udp_max_retr = strtoul(optarg, nullptr, 10);
         break;
       case 'h':
         std::cout << USAGE;
         return 0;
-        break;
+      default:
+        std::cerr << "Invalid Usage." << std::endl;
+        std::cout << USAGE;
+        return 1;
     }
   }
 
-  if (server_hostname.size() == 0)
+  if (server_hostname.empty())
   {
     throw std::runtime_error("HOSTNAME must be supplied!");
   }
@@ -78,7 +79,7 @@ int main(int argc, char *argv[])
 
   int rv;
 
-  if (NULL != (rv = getaddrinfo(server_hostname.c_str(), port_number.c_str(), &hints, &result)))
+  if (0 != (rv = getaddrinfo(server_hostname.c_str(), port_number.c_str(), &hints, &result)))
   {
     std::cerr << "getaddrinfo: " << gai_strerror(rv);
     return 1;
@@ -89,7 +90,7 @@ int main(int argc, char *argv[])
   if (proto == UDP) client = new UDPClient(*result, udp_timeout, udp_max_retr);
   else if (proto == TCP)
   {
-    throw new NotImplemented();
+    throw NotImplemented();
   }
   else
   {

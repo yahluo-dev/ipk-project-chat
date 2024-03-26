@@ -1,15 +1,15 @@
 #include "client.h"
 #include <regex>
-#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <iterator>
-#include <sys/time.h>
+#include <chrono>
+#include "exception.h"
 
 std::regex username_regex("[a-zA-Z0-9-]{1,20}", std::regex_constants::ECMAScript);
 std::regex secret_regex("[a-zA-Z0-9-]{1,128}", std::regex_constants::ECMAScript);
-std::regex displayname_regex("[\x21-\x7e]{1,20}", std::regex_constants::ECMAScript);
-std::regex message_content_regex("[\x20-\x7e]{1,1400}", std::regex_constants::ECMAScript);
+std::regex displayname_regex(R"([!-~]{1,20})", std::regex_constants::ECMAScript);
+std::regex message_content_regex(R"([ -~]{1,1400})", std::regex_constants::ECMAScript);
 
 const char *help =  "Usage:\n"
                     "\t/auth USERNAME SECRET DISPLAYNAME - Authenticate using supplied credentials.\n"
@@ -26,14 +26,13 @@ void *get_in_addr(struct sockaddr *sa)
   return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-UDPClient::UDPClient(addrinfo _server_addrinfo, int _timeout, int _udp_max_retr)
+UDPClient::UDPClient(addrinfo _server_addrinfo, unsigned int _timeout, unsigned int _udp_max_retr)
 {
-  server_addrinfo = _server_addrinfo;
   char s[INET_ADDRSTRLEN];
 
   struct addrinfo *p;
 
-  for (p = &_server_addrinfo; p != NULL; p = p->ai_next)
+  for (p = &_server_addrinfo; p != nullptr; p = p->ai_next)
   {
     if ((client_socket = socket(p->ai_family, p->ai_socktype,
             p->ai_protocol)) == -1)
@@ -42,15 +41,6 @@ UDPClient::UDPClient(addrinfo _server_addrinfo, int _timeout, int _udp_max_retr)
       continue;
     }
 
-    struct timeval timeout_val = {0};
-    timeout_val.tv_sec = _timeout / 1000;
-    timeout_val.tv_usec = (_timeout % 1000) * 1000; // in us
-
-    if (0 != setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, 
-        (void *)&timeout_val, sizeof(timeout_val)))
-    {
-      throw new std::runtime_error("setsockopt failed.");
-    }
     if (-1 == connect(client_socket, p->ai_addr, p->ai_addrlen))
     {
       perror("connect");
@@ -59,7 +49,7 @@ UDPClient::UDPClient(addrinfo _server_addrinfo, int _timeout, int _udp_max_retr)
     break;
   }
 
-  if (p == NULL)
+  if (p == nullptr)
   {
       perror("connect");
       exit(1);
@@ -69,30 +59,22 @@ UDPClient::UDPClient(addrinfo _server_addrinfo, int _timeout, int _udp_max_retr)
     << inet_ntop(p->ai_family, get_in_addr(
           (struct sockaddr *)p->ai_addr), s, sizeof(s));
 
-  session = NULL;
-}
+  std::chrono::milliseconds timeout_ms(_timeout);
 
-void printVector(const std::vector<std::string>& vec) {
-    std::cout << "[ ";
-    for (size_t i = 0; i < vec.size(); ++i) {
-        std::cout << "\"" << vec[i] << "\"";
-        if (i != vec.size() - 1)
-            std::cout << ", ";
-    }
-    std::cout << " ]" << std::endl;
+  session = new Session(client_socket, _udp_max_retr,
+                        timeout_ms);
 }
 
 void UDPClient::repl()
 {
-  std::string input = "";
-  while(1)
+  std::string input;
+  while(true)
   {
-    // 
     std::cout << "IPK24-CHAT> ";
     std::getline(std::cin, input);
     if (std::cin.eof())
     {
-      throw std::runtime_error("Input ended.");
+      throw ReplEof();
     }
 
     if (input[0] == '/')
@@ -103,10 +85,9 @@ void UDPClient::repl()
       std::istream_iterator<std::string> begin(ss);
       std::istream_iterator<std::string> end;
       std::vector<std::string> command_args(begin, end);
-      printVector(command_args);
 
       // Auth
-      if (!command_args[0].compare("auth"))
+      if (command_args[0] == "auth")
       {
         if (command_args.size() != 4)
         {
@@ -133,18 +114,23 @@ void UDPClient::repl()
           continue;
         }
 
-        Session *new_session = new Session(client_socket, username, secret, displayname);
+        std::cout << "Authenticating..." << std::endl;
 
-        if (0 != new_session->auth())
+        try
         {
-          std::cerr << "Authentication failed." << std::endl;
-          continue;
+          if (0 != session->auth(username, secret, displayname))
+          {
+            std::cerr << "Authentication failed." << std::endl;
+            continue;
+          }
+          std::cerr << "Authentication success." << std::endl;
         }
-        std::cerr << "Authentication success." << std::endl;
-
-        session = new_session;
+        catch (ConnectionFailed &e)
+        {
+          std::cout << "Connection failed: " << e.what() << std::endl;
+        }
       }
-      else if (!command_args[0].compare("join"))
+      else if (command_args[0] == "join")
       {
         if (command_args.size() != 3)
         {
@@ -152,20 +138,26 @@ void UDPClient::repl()
           continue;
         }
 
-        if (NULL == session)
-        {
-          std::cerr << "Not connected to any server!";
-        }
-
         std::string channel_id = command_args[1];
         std::string displayname = command_args[2];
 
-        if (0 != session->join(channel_id, displayname))
+        try
         {
-          std::cerr << "Join failed!" << std::endl;
+          if (0 != session->join(channel_id, displayname))
+          {
+            std::cerr << "Join failed!" << std::endl;
+          }
+          else
+          {
+            std::cout << "Joined " << channel_id << std::endl;
+          }
+        }
+        catch (ConnectionFailed &e)
+        {
+          std::cout << "Connection failed: " << e.what() << std::endl;
         }
       }
-      else if (!command_args[0].compare("rename"))
+      else if (command_args[0] == "rename")
       {
         if (command_args.size() != 2)
         {
@@ -180,7 +172,7 @@ void UDPClient::repl()
           std::cerr << "Rename failed!" << std::endl;
         }
       }
-      else if (!command_args[0].compare("help"))
+      else if (command_args[0] == "help")
       {
         puts(help);
       }
@@ -196,11 +188,6 @@ void UDPClient::repl()
       if (!std::regex_match(input, message_content_regex))
       {
         std::cerr << "Invalid message content. Only characters from ASCII range \\x20-\\x7e are allowed." << std::endl;
-        continue;
-      }
-      if (NULL == session)
-      {
-        std::cerr << "You are not authenticated!" << std::endl;
         continue;
       }
       session->sendmsg(input);
