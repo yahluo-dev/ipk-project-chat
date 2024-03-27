@@ -28,6 +28,7 @@ public:
             std::chrono::milliseconds _timeout, Session *_session);
   void notify_confirm(ConfirmMessage *msg);
   void send_msg(MessageWithId *msg);
+  void confirm(uint16_t ref_message_id);
 };
 
 #endif // SENDER_H

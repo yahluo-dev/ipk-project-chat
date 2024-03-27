@@ -6,6 +6,7 @@
 #include "exception.h"
 #include "session.h"
 #include <memory>
+#include <cstring> // strerrno
 
 std::condition_variable confirm_cv;
 std::mutex confirm_mutex;
@@ -38,6 +39,19 @@ void UDPSender::notify_confirm(ConfirmMessage *msg)
     } else if (msg->ref_message_id > last_sent->message_id) {
       throw std::runtime_error("Got confirm for message not yet sent!");
     }
+  }
+}
+
+void UDPSender::confirm(uint16_t ref_message_id)
+{
+  std::unique_ptr<ConfirmMessage> confirmation = std::make_unique<ConfirmMessage>(ref_message_id);
+  std::string serialized = confirmation->serialize();
+
+  if (-1 == send(sock, serialized.data(), serialized.size(), 0))
+  {
+    printf("Send message failed: %s\n", strerror(errno));
+    fflush(stdout);
+    throw ConnectionFailed();
   }
 }
 

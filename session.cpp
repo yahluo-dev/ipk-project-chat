@@ -20,7 +20,7 @@ void Session::notify_incoming(Message *message)
   if (message->code == CODE_MSG)
   {
     auto msg_message = dynamic_cast<MsgMessage *>(message);
-    std::cout << msg_message->display_name << ": " << msg_message << std::endl;
+    std::cout << msg_message->display_name << ": " << msg_message->message_contents << std::endl;
   }
 
   inbox.push_back(message);

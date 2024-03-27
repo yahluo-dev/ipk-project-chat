@@ -6,6 +6,7 @@
 #include "exception.h"
 #include <cerrno>
 #include <cstring>
+#include <memory>
 
 #define RECVMESSAGE_MAXLEN 2048
 
@@ -38,6 +39,7 @@ void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
       fflush(stdout);
       throw ConnectionFailed();
     }
+    // TODO: Keep track of retransmissions from server
 
     std::string binary_message = std::string(buffer, got_bytes);
 
@@ -51,6 +53,8 @@ void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
     else
     {
       session->notify_incoming(parsed_message);
+
+      sender->confirm(dynamic_cast<MessageWithId *>(parsed_message)->message_id);
     }
     // Notify session
   }
