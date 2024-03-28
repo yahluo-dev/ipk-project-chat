@@ -16,7 +16,7 @@ class UDPClient
     Session *session;
     int client_socket;
   public:
-    UDPClient(struct addrinfo _server_addrinfo, unsigned int timeout, unsigned int udp_max_retr);
+    UDPClient(std::string hostname, std::string port, unsigned int timeout, unsigned int udp_max_retr);
     void repl();
 };
 

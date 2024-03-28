@@ -22,7 +22,6 @@ class Message
   public:
     uint8_t code;
     virtual std::string serialize();
-    virtual void print();
     virtual ~Message();
 };
 
@@ -31,7 +30,7 @@ class ConfirmMessage : public Message
   private:
   public:
     uint16_t ref_message_id;
-    ConfirmMessage(uint16_t _ref_message_id);
+    explicit ConfirmMessage(uint16_t _ref_message_id);
     std::string serialize() override;
 };
 
@@ -42,6 +41,7 @@ class MessageWithId : public Message
     MessageWithId();
     MessageWithId(message_code_t _code, int _message_id);
     uint16_t message_id;
+    ~MessageWithId() override;
 };
 
 class ReplyMessage : public MessageWithId
@@ -53,7 +53,6 @@ class ReplyMessage : public MessageWithId
     std::string message_contents;
     ReplyMessage(uint16_t _message_id, uint8_t _result, uint16_t _ref_message_id,
         std::string _message_contents);
-    void print();
 };
 
 class AuthMessage : public MessageWithId
@@ -66,6 +65,7 @@ class AuthMessage : public MessageWithId
     AuthMessage(std::string _username, 
         std::string _secret, std::string _display_name, uint16_t _message_id);
     std::string serialize() override;
+    ~AuthMessage() override;
 };
 
 class JoinMessage : public MessageWithId
@@ -87,7 +87,6 @@ class MsgMessage : public MessageWithId
     MsgMessage(uint16_t _message_id, std::string _display_name,
         std::string _message_contents);
     std::string serialize() override;
-    void print();
 };
 
 class ErrMessage : public MessageWithId
@@ -104,13 +103,13 @@ class ByeMessage : public MessageWithId
 {
   private:
   public:
-    ByeMessage(uint16_t _message_id);
+    explicit ByeMessage(uint16_t _message_id);
 };
 
 class UnknownMessage : public Message
 {
   public:
-    UnknownMessage(uint8_t code);
+    explicit UnknownMessage(uint8_t code);
 };
 
 #endif // MESSAGE_H

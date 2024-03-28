@@ -1,6 +1,7 @@
 #include "message.h"
 #include "exception.h"
 #include <iostream>
+#include <arpa/inet.h>
 
 std::string Message::serialize()
 {
@@ -12,12 +13,13 @@ Message::~Message() noexcept
 {
 }
 
-void Message::print()
+MessageWithId::~MessageWithId() noexcept
 {
-  std::cerr << "Virtual base method called!" << std::endl;
-  throw NotImplemented();
 }
 
+AuthMessage::~AuthMessage() noexcept
+{
+}
 ConfirmMessage::ConfirmMessage(uint16_t _ref_message_id)
 {
   code = CODE_CONFIRM;
@@ -26,7 +28,8 @@ ConfirmMessage::ConfirmMessage(uint16_t _ref_message_id)
 std::string ConfirmMessage::serialize()
 {
   std::string binary_message = std::string(1u, CODE_CONFIRM);
-  binary_message += std::string((char *)&ref_message_id, sizeof(uint16_t));
+  uint16_t net_ref_msg_id = ntohs(ref_message_id);
+  binary_message += std::string((char *)&net_ref_msg_id, sizeof(uint16_t));
 
   return binary_message;
 }
@@ -44,7 +47,8 @@ AuthMessage::AuthMessage(std::string _username,
 std::string AuthMessage::serialize()
 {
   std::string binary_message = std::string(1u, CODE_AUTH);
-  binary_message += std::string((char *)&message_id, sizeof(uint16_t));
+  uint16_t net_msg_id = ntohs(message_id);
+  binary_message += std::string((char *)&net_msg_id, sizeof(uint16_t));
   binary_message += username;
   binary_message += std::string(1u, '\x00');
   binary_message += display_name;
@@ -77,7 +81,8 @@ JoinMessage::JoinMessage(uint16_t _message_id, std::string _channel_id,
 std::string JoinMessage::serialize()
 {
   std::string binary_message = std::string(1u, CODE_JOIN);
-  binary_message += std::string((char *)&message_id, sizeof(uint16_t));
+  uint16_t net_msg_id = ntohs(message_id);
+  binary_message += std::string((char *)&net_msg_id, sizeof(uint16_t));
   binary_message += channel_id;
   binary_message += std::string(1u, '\x00');
   binary_message += display_name;
@@ -98,25 +103,14 @@ MsgMessage::MsgMessage(uint16_t _message_id, std::string _display_name,
 std::string MsgMessage::serialize()
 {
   std::string binary_message = std::string(1u, CODE_MSG);
-  binary_message += std::string((char *)&message_id, sizeof(uint16_t));
+  uint16_t net_msg_id = ntohs(message_id);
+  binary_message += std::string((char *)&net_msg_id, sizeof(uint16_t));
   binary_message += display_name;
   binary_message += std::string(1u, '\x00');
   binary_message += message_contents;
   binary_message += std::string(1u, '\x00');
 
   return binary_message;
-}
-
-void MsgMessage::print()
-{
-  std::cout << message_id << " " << display_name << ": "
-    << message_contents << std::endl;
-}
-
-void ReplyMessage::print()
-{
-  std::cout << message_id << " " << result << " replying to " << ref_message_id << ": "
-    << message_contents << std::endl;
 }
 
 ErrMessage::ErrMessage(uint16_t _message_id, std::string _display_name,

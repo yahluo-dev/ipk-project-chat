@@ -2,6 +2,7 @@
 #include <vector>
 #include <stdexcept>
 #include <iostream>
+#include <arpa/inet.h>
 
 // TODO: Fix endianness of numbers (Must be BE when transmitting)
 
@@ -40,19 +41,22 @@ Message *MessageFactory::create(std::string message)
     case CODE_CONFIRM:
     {
       uint16_t ref_message_id = *(uint16_t *)generic_message;
+      ref_message_id = ntohs(ref_message_id);
       generic_message += sizeof(uint16_t);
       std::cerr << "DEBUG message_factory: ref_message_id "
-        << std::to_string(ref_message_id) << std::endl;
+        << std::to_string(ntohs(ref_message_id)) << std::endl;
 
       return new ConfirmMessage(ref_message_id);
     }
     case CODE_REPLY:
     {
       uint16_t message_id = *(uint16_t *)generic_message;
+      message_id = ntohs(message_id);
       generic_message += sizeof(uint16_t);
       uint8_t result = *(uint8_t *)generic_message;
       generic_message += sizeof(uint8_t);
       uint16_t ref_message_id = *(uint16_t *)generic_message;
+      ref_message_id = ntohs(ref_message_id);
       generic_message += sizeof(uint16_t);
       auto data_fields = parse_null_terminated_data(generic_message, 1);
       std::string message_contents = data_fields[0];
@@ -63,8 +67,8 @@ Message *MessageFactory::create(std::string message)
     case CODE_MSG:
     {
       uint16_t message_id = *(uint16_t *)generic_message;
+      message_id = ntohs(message_id);
       generic_message += sizeof(uint16_t);
-
       auto data_fields = parse_null_terminated_data(generic_message, 2);
       std::string displayname = data_fields[0];
       std::string message_contents = data_fields[1];
@@ -73,6 +77,7 @@ Message *MessageFactory::create(std::string message)
     case CODE_ERR:
     {
       uint16_t message_id = *(uint16_t *)generic_message;
+      message_id = ntohs(message_id);
       generic_message += sizeof(uint16_t);
 
       auto data_fields = parse_null_terminated_data(generic_message, 2);
@@ -83,13 +88,14 @@ Message *MessageFactory::create(std::string message)
     case CODE_BYE:
     {
       uint16_t message_id = *(uint16_t *)generic_message;
+      message_id = ntohs(message_id);
       generic_message += sizeof(uint16_t);
       return new ByeMessage(message_id);
     }
     default:
     {
-      return new UnknownMessage(code);
-      throw new std::invalid_argument("Packet with unexpected code received.");
+      throw std::invalid_argument("Packet with unexpected code received.");
+      //return new UnknownMessage(code);
     }
   }
 }

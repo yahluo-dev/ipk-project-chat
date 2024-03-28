@@ -17,51 +17,12 @@ const char *help =  "Usage:\n"
                     "\t/rename DISPLAYNAME - Change current display name.\n"
                     "\t/help - Show this message.\n";
 
-void *get_in_addr(struct sockaddr *sa)
+
+UDPClient::UDPClient(std::string hostname, std::string port, unsigned int _timeout, unsigned int _udp_max_retr)
 {
-  if (sa->sa_family == AF_INET)
-  {
-    return &(((struct sockaddr_in*)sa)->sin_addr);
-  }
-  return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
-
-UDPClient::UDPClient(addrinfo _server_addrinfo, unsigned int _timeout, unsigned int _udp_max_retr)
-{
-  char s[INET_ADDRSTRLEN];
-
-  struct addrinfo *p;
-
-  for (p = &_server_addrinfo; p != nullptr; p = p->ai_next)
-  {
-    if ((client_socket = socket(p->ai_family, p->ai_socktype,
-            p->ai_protocol)) == -1)
-    {
-      perror("client: socket");
-      continue;
-    }
-
-    if (-1 == connect(client_socket, p->ai_addr, p->ai_addrlen))
-    {
-      perror("connect");
-      continue;
-    }
-    break;
-  }
-
-  if (p == nullptr)
-  {
-      perror("connect");
-      exit(1);
-  }
-
-  std::cerr << "client: connecting to " 
-    << inet_ntop(p->ai_family, get_in_addr(
-          (struct sockaddr *)p->ai_addr), s, sizeof(s));
-
   std::chrono::milliseconds timeout_ms(_timeout);
 
-  session = new Session(client_socket, _udp_max_retr,
+  session = new Session(hostname, port, _udp_max_retr,
                         timeout_ms);
 }
 
@@ -74,7 +35,15 @@ void UDPClient::repl()
     std::getline(std::cin, input);
     if (std::cin.eof())
     {
-      throw ReplEof();
+      // TODO: Send bye to server
+      std::cout << "Bye!" << std::endl;
+      std::cout << std::endl;
+      return;
+    }
+
+    if (STATE_INTERNAL_ERROR == session->get_state())
+    {
+      throw ConnectionFailed();
     }
 
     if (input[0] == '/')
@@ -116,19 +85,12 @@ void UDPClient::repl()
 
         std::cout << "Authenticating..." << std::endl;
 
-        try
+        if (0 != session->auth(username, secret, displayname))
         {
-          if (0 != session->auth(username, secret, displayname))
-          {
-            std::cerr << "Authentication failed." << std::endl;
-            continue;
-          }
-          std::cerr << "Authentication success." << std::endl;
+          std::cerr << "Authentication failed." << std::endl;
+          continue;
         }
-        catch (ConnectionFailed &e)
-        {
-          std::cout << "Connection failed: " << e.what() << std::endl;
-        }
+        std::cerr << "Authentication success." << std::endl;
       }
       else if (command_args[0] == "join")
       {
@@ -152,9 +114,9 @@ void UDPClient::repl()
             std::cout << "Joined " << channel_id << std::endl;
           }
         }
-        catch (ConnectionFailed &e)
+        catch (NotAuthenticated &e)
         {
-          std::cout << "Connection failed: " << e.what() << std::endl;
+          std::cout << "Not authenticated. Use /auth." << std::endl;
         }
       }
       else if (command_args[0] == "rename")
@@ -182,6 +144,10 @@ void UDPClient::repl()
         puts(help);
       }
     }
+    else if (input.empty())
+    {
+      continue;
+    }
     else
     {
       // Is message. Send.
@@ -190,7 +156,14 @@ void UDPClient::repl()
         std::cerr << "Invalid message content. Only characters from ASCII range \\x20-\\x7e are allowed." << std::endl;
         continue;
       }
-      session->sendmsg(input);
+      try
+      {
+        session->sendmsg(input);
+      }
+      catch (NotInChannel &e)
+      {
+        std::cout << "Cannot send message while not in channel." << std::endl;
+      }
     }
   }
 }

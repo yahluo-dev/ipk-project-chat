@@ -24,7 +24,8 @@ private:
   Session *session;
   std::chrono::milliseconds timeout;
 public:
-  UDPSender(int _sock, unsigned int _max_retr,
+  struct addrinfo *server_addrinfo;
+  UDPSender(int _sock, struct addrinfo *server_addrinfo, unsigned int _max_retr,
             std::chrono::milliseconds _timeout, Session *_session);
   void notify_confirm(ConfirmMessage *msg);
   void send_msg(MessageWithId *msg);

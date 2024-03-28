@@ -4,6 +4,7 @@
 #include <thread>
 #include <condition_variable>
 #include <mutex>
+#include <arpa/inet.h>
 #include "sender.h"
 #include "receiver.h"
 
@@ -12,6 +13,14 @@ std::mutex inbox_mutex;
 
 volatile session_state_t Session::state;
 std::vector<Message *> Session::inbox;
+
+void Session::set_receiver_ex()
+{
+  // called by receiver
+  receiver_ex = std::current_exception();
+  state = STATE_INTERNAL_ERROR;
+  inbox_cv.notify_one(); // If the thread is waiting, free it
+}
 
 void Session::notify_incoming(Message *message)
 {
@@ -28,18 +37,84 @@ void Session::notify_incoming(Message *message)
   inbox_cv.notify_one();
 }
 
-Session::Session(int _client_socket, unsigned int _max_retr, std::chrono::milliseconds _timeout)
+void *get_in_addr(struct sockaddr *sa)
 {
-  client_socket = _client_socket;
+  if (sa->sa_family == AF_INET)
+  {
+    return &(((struct sockaddr_in*)sa)->sin_addr);
+  }
+  return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+void Session::update_port(const std::string &port)
+{
+  struct addrinfo hints = {0};
+  server_addrinfo = nullptr;
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_DGRAM;
+
+  int rv;
+  if (0 != (rv = getaddrinfo(hostname.c_str(), port.c_str(), &hints, &server_addrinfo)))
+  {
+    std::cerr << "getaddrinfo: " << gai_strerror(rv);
+  }
+
+  sender->server_addrinfo = server_addrinfo;
+}
+
+Session::Session(const std::string &_hostname, const std::string& port, unsigned int _max_retr, std::chrono::milliseconds _timeout)
+{
+  int rv;
+  struct addrinfo hints = {0};
+  server_addrinfo = nullptr;
+  struct addrinfo *p;
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_DGRAM;
+  char s[INET_ADDRSTRLEN];
+  hostname = _hostname;
+  max_retr = _max_retr;
+
+  if (0 != (rv = getaddrinfo(hostname.c_str(), port.c_str(), &hints, &server_addrinfo)))
+  {
+    std::cerr << "getaddrinfo: " << gai_strerror(rv);
+  }
+  for (p = server_addrinfo; p != nullptr; p = p->ai_next)
+  {
+    if ((client_socket = socket(p->ai_family, p->ai_socktype,
+                                p->ai_protocol)) == -1)
+    {
+      perror("client: socket");
+      continue;
+    }
+
+    break;
+  }
+
+  if (p == nullptr)
+  {
+    perror("connect");
+    exit(1);
+  }
+
+  std::cerr << "client: connecting to "
+            << inet_ntop(p->ai_family, get_in_addr(
+                (struct sockaddr *)p->ai_addr), s, sizeof(s))
+            << std::endl;
+
   std::cerr << "DEBUG: Created session. Server with " << _max_retr << " retr." << std::endl;
   timeout = _timeout;
 
-  sender = new UDPSender(_client_socket, _max_retr, timeout, this);
+  sender = new UDPSender(client_socket, server_addrinfo, _max_retr, timeout, this);
   receiver = new UDPReceiver(client_socket, this);
 
   receiving_thread = std::jthread(UDPReceiver::receive, this, client_socket, sender);
 
   message_id = 1;
+}
+
+Session::~Session()
+{
+  close(client_socket);
 }
 
 int Session::sendmsg(const std::string &_contents)
@@ -107,7 +182,6 @@ int Session::auth(const std::string &_username, const std::string &_secret,
   displayname = _display_name;
   secret = _secret;
 
-  std::cerr << "DEBUG: sending AUTH." << std::endl;
   MessageWithId *message = new AuthMessage(username, secret, displayname, message_id);
   sender->send_msg(message);
 

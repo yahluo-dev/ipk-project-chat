@@ -19,13 +19,9 @@ int main(int argc, char *argv[])
   std::string proto_str;
 
   Protocol proto = NONE;
-  unsigned int udp_timeout = 16000;
+  unsigned int udp_timeout = 5000;
   unsigned int udp_max_retr = 3;
   int c;
-
-  struct addrinfo hints = {0};
-  struct addrinfo *result = nullptr;
-  
   while ((c = getopt(argc, argv, "t:s:p:d:r:h")) != -1)
   {
     switch(c)
@@ -72,22 +68,9 @@ int main(int argc, char *argv[])
   {
     throw std::runtime_error("HOSTNAME must be supplied!");
   }
-
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AF_INET;
-  hints.ai_socktype = SOCK_DGRAM;
-
-  int rv;
-
-  if (0 != (rv = getaddrinfo(server_hostname.c_str(), port_number.c_str(), &hints, &result)))
-  {
-    std::cerr << "getaddrinfo: " << gai_strerror(rv);
-    return 1;
-  }
-
   UDPClient *client;
 
-  if (proto == UDP) client = new UDPClient(*result, udp_timeout, udp_max_retr);
+  if (proto == UDP) client = new UDPClient(server_hostname, port_number, udp_timeout, udp_max_retr);
   else if (proto == TCP)
   {
     throw NotImplemented();
@@ -97,7 +80,12 @@ int main(int argc, char *argv[])
     throw std::runtime_error("PROTOCOL must be supplied!");
   }
 
-  client->repl();
-
-  return 0;
+  try
+  {
+    client->repl();
+  }
+  catch (ConnectionFailed &e)
+  {
+    std::cout << "Fatal connection error." << std::endl;
+  }
 }
