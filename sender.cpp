@@ -63,9 +63,9 @@ void UDPSender::send_msg(MessageWithId *msg)
   std::string serialized = msg->serialize();
   std::unique_lock ul(confirm_mutex);
 
-  int retries;
+  unsigned int retries;
 
-  for (; retries > 0;)
+  for (retries = max_retr; retries > 0; retries--)
   {
     std::cout << "Sending" << std::endl;
 
@@ -88,7 +88,6 @@ void UDPSender::send_msg(MessageWithId *msg)
       {
         break;
       }
-    retries--;
     if (STATE_INTERNAL_ERROR == session->get_state())
     {
       return;

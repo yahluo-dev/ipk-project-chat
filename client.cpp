@@ -36,6 +36,7 @@ void UDPClient::repl()
     if (std::cin.eof())
     {
       // TODO: Send bye to server
+      session->bye();
       std::cout << "Bye!" << std::endl;
       std::cout << std::endl;
       return;

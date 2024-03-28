@@ -104,6 +104,7 @@ class ByeMessage : public MessageWithId
   private:
   public:
     explicit ByeMessage(uint16_t _message_id);
+    std::string serialize() override;
 };
 
 class UnknownMessage : public Message

@@ -34,6 +34,7 @@ void Session::notify_incoming(Message *message)
 
   inbox.push_back(message);
 
+  std::cerr << "Notifying inbox" << std::endl;
   inbox_cv.notify_one();
 }
 
@@ -137,6 +138,12 @@ int Session::sendmsg(const std::string &_contents)
   message_id++;
 
   return 1;
+}
+
+void Session::bye()
+{
+  auto *bye_message = new ByeMessage(message_id);
+  sender->send_msg(bye_message);
 }
 
 int Session::join(const std::string &_channel_id, const std::string &_display_name)

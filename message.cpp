@@ -143,3 +143,11 @@ MessageWithId::MessageWithId()
 {
   message_id = -1;
 }
+
+std::string ByeMessage::serialize()
+{
+  std::string binary_message = std::string(1u, (char)CODE_BYE);
+  uint16_t net_msg_id = htons(message_id);
+  binary_message += std::string((char *)&net_msg_id, sizeof(uint16_t));
+  return binary_message;
+}

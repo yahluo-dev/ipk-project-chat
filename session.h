@@ -51,6 +51,7 @@ class Session
     virtual int auth(const std::string &_username, const std::string &_secret, const std::string &_displayname);
     virtual void set_receiver_ex();
     virtual void update_port(const std::string &port);
+    virtual void bye();
 
     virtual session_state_t get_state();
 
