@@ -19,10 +19,8 @@ enum session_state_t
 {
   STATE_START,
   STATE_AUTH,
-  STATE_JOIN,
   STATE_OPEN,
   STATE_ERROR,
-  STATE_END,
   STATE_INTERNAL_ERROR
 };
 
@@ -31,17 +29,16 @@ class Session
   private:
     int client_socket;
     uint16_t message_id;
-    std::string username, secret, display_name;
+    std::string username, secret, display_name, hostname;
     UDPSender *sender;
-    static volatile session_state_t state;
+    static session_state_t state;
     std::chrono::milliseconds timeout;
     UDPReceiver *receiver;
     std::jthread receiving_thread;
     static std::vector<Message *> inbox;
     std::exception_ptr receiver_ex;
     struct addrinfo *server_addrinfo;
-    std::string hostname;
-    int max_retr;
+    unsigned int max_retr;
   public:
     Session(const std::string &hostname, const std::string& port, unsigned int max_retr, std::chrono::milliseconds timeout);
     ~Session();

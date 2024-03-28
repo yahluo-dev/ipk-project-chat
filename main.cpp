@@ -1,12 +1,10 @@
 #include <iostream>
-#include <sys/socket.h>
 #include <unistd.h>
-#include <cstring>
-#include <netdb.h>
 #include <algorithm>
 #include "exception.h"
 #include "main.h"
 #include "client.h"
+#include <climits>
 
 #define DEFAULT_PORT "4567"
 
@@ -21,10 +19,10 @@ int main(int argc, char *argv[])
   Protocol proto = NONE;
   unsigned int udp_timeout = 5000;
   unsigned int udp_max_retr = 3;
-  int c;
-  while ((c = getopt(argc, argv, "t:s:p:d:r:h")) != -1)
+  int opt_char;
+  while ((opt_char = getopt(argc, argv, "t:s:p:d:r:h")) != -1)
   {
-    switch(c)
+    switch(opt_char)
     {
       case 't':
         proto_str = optarg;
@@ -41,19 +39,38 @@ int main(int argc, char *argv[])
         server_hostname = optarg;
         break;
       case 'p':
-        if (atoi(optarg) > 65535 || atoi(optarg) < 1)
+      {
+        long arg_port = strtol(optarg, nullptr, 10);
+        if (arg_port > 65535 || arg_port < 1)
         {
           std::cerr << "-s: PORT must be in range <1, 65535>!" << std::endl;
           exit(1);
         }
         port_number = optarg;
         break;
+      }
       case 'd':
-        udp_timeout = strtoul(optarg, nullptr, 10);
+      {
+        long arg_val = strtol(optarg, nullptr, 10);
+        if (arg_val < 0 || arg_val > UINT_MAX)
+        {
+          std::cerr << "-d: Timeout must be positive!" << std::endl;
+          exit(1);
+        }
+        udp_timeout = arg_val;
         break;
+      }
       case 'r':
-        udp_max_retr = strtoul(optarg, nullptr, 10);
+      {
+        long arg_val = strtol(optarg, nullptr, 10);
+        if (arg_val < 1 || arg_val > UINT_MAX)
+        {
+          std::cerr << "-r: Max retries must be >=1!" << std::endl;
+          exit(1);
+        }
+        udp_max_retr = arg_val;
         break;
+      }
       case 'h':
         std::cout << USAGE;
         return 0;
@@ -66,7 +83,8 @@ int main(int argc, char *argv[])
 
   if (server_hostname.empty())
   {
-    throw std::runtime_error("HOSTNAME must be supplied!");
+    std::cerr << "HOSTNAME must be supplied!" << std::endl;
+    exit(1);
   }
   UDPClient *client;
 
@@ -77,8 +95,10 @@ int main(int argc, char *argv[])
   }
   else
   {
-    throw std::runtime_error("PROTOCOL must be supplied!");
+    std::cerr << "PROTOCOL must be supplied!" << std::endl;
   }
+
+  std::cout << "Use /help to get help. Exit with ^D." << std::endl;
 
   try
   {

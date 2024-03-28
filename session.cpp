@@ -10,16 +10,15 @@
 
 std::condition_variable inbox_cv;
 std::mutex inbox_mutex;
-
-volatile session_state_t Session::state;
+session_state_t Session::state;
 std::vector<Message *> Session::inbox;
 
 void Session::set_receiver_ex()
 {
-  // called by receiver
+  // Called by receiver, notify of error
   receiver_ex = std::current_exception();
   state = STATE_INTERNAL_ERROR;
-  inbox_cv.notify_one(); // If the thread is waiting, free it
+  inbox_cv.notify_all(); // If the thread is waiting, free it
 }
 
 void Session::notify_incoming(Message *message)
@@ -71,7 +70,6 @@ Session::Session(const std::string &_hostname, const std::string& port, unsigned
   struct addrinfo *p;
   hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_DGRAM;
-  char s[INET_ADDRSTRLEN];
   hostname = _hostname;
   max_retr = _max_retr;
 
@@ -91,18 +89,6 @@ Session::Session(const std::string &_hostname, const std::string& port, unsigned
     break;
   }
 
-  if (p == nullptr)
-  {
-    perror("connect");
-    exit(1);
-  }
-
-  std::cerr << "client: connecting to "
-            << inet_ntop(p->ai_family, get_in_addr(
-                (struct sockaddr *)p->ai_addr), s, sizeof(s))
-            << std::endl;
-
-  std::cerr << "DEBUG: Created session. Server with " << _max_retr << " retr." << std::endl;
   timeout = _timeout;
 
   sender = new UDPSender(client_socket, server_addrinfo, _max_retr, timeout, this);

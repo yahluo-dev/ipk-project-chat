@@ -7,7 +7,6 @@
 #include <cerrno>
 #include <cstring>
 #include <memory>
-#include <arpa/inet.h>
 
 #define RECVMESSAGE_MAXLEN 2048
 
@@ -52,8 +51,6 @@ void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
       return;
     }
     // TODO: Keep track of retransmissions from server
-
-    printf("Sender's address: %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
     session->update_port(std::to_string(ntohs(client_addr.sin_port)));
 

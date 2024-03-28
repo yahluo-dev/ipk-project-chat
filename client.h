@@ -14,7 +14,6 @@ class UDPClient
 {
   private:
     Session *session;
-    int client_socket;
   public:
     UDPClient(std::string hostname, std::string port, unsigned int timeout, unsigned int udp_max_retr);
     void repl();
