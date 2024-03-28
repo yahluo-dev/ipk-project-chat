@@ -131,7 +131,7 @@ int Session::sendmsg(const std::string &_contents)
     std::cout << "DEBUG: state " << state << std::endl;
   }
 
-  auto message = new MsgMessage(message_id, displayname, _contents);
+  auto message = new MsgMessage(message_id, display_name, _contents);
   std::cout << "DEBUG: Sending message with contents" << " " << _contents << std::endl;
   sender->send_msg(message);
 
@@ -146,17 +146,15 @@ void Session::bye()
   sender->send_msg(bye_message);
 }
 
-int Session::join(const std::string &_channel_id, const std::string &_display_name)
+int Session::join(const std::string &_channel_id)
 {
   if (state == STATE_START)
   {
     throw NotAuthenticated();
   }
 
-  MessageWithId *message = new JoinMessage(message_id, _channel_id, _display_name);
+  MessageWithId *message = new JoinMessage(message_id, _channel_id, display_name);
   sender->send_msg(message);
-
-  state = STATE_JOIN;
 
   // TODO
 
@@ -167,7 +165,8 @@ int Session::join(const std::string &_channel_id, const std::string &_display_na
 
 int Session::rename(const std::string &_new_name)
 {
-  throw NotImplemented();
+  display_name = _new_name;
+  return 0;
 }
 
 session_state_t Session::get_state()
@@ -186,10 +185,10 @@ int Session::auth(const std::string &_username, const std::string &_secret,
   }
 
   username = _username;
-  displayname = _display_name;
+  display_name = _display_name;
   secret = _secret;
 
-  MessageWithId *message = new AuthMessage(username, secret, displayname, message_id);
+  MessageWithId *message = new AuthMessage(username, secret, display_name, message_id);
   sender->send_msg(message);
 
   // Wait for REPLY

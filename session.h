@@ -31,7 +31,7 @@ class Session
   private:
     int client_socket;
     uint16_t message_id;
-    std::string username, secret, displayname;
+    std::string username, secret, display_name;
     UDPSender *sender;
     static volatile session_state_t state;
     std::chrono::milliseconds timeout;
@@ -46,7 +46,7 @@ class Session
     Session(const std::string &hostname, const std::string& port, unsigned int max_retr, std::chrono::milliseconds timeout);
     ~Session();
     virtual int sendmsg(const std::string &contents);
-    virtual int join(const std::string &channel_id, const std::string &displayname);
+    virtual int join(const std::string &channel_id);
     virtual int rename(const std::string &new_name);
     virtual int auth(const std::string &_username, const std::string &_secret, const std::string &_displayname);
     virtual void set_receiver_ex();

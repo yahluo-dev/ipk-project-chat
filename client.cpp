@@ -95,18 +95,15 @@ void UDPClient::repl()
       }
       else if (command_args[0] == "join")
       {
-        if (command_args.size() != 3)
+        if (command_args.size() != 2)
         {
           std::cerr << "Invalid usage." << std::endl;
           continue;
         }
-
         std::string channel_id = command_args[1];
-        std::string displayname = command_args[2];
-
         try
         {
-          if (0 != session->join(channel_id, displayname))
+          if (0 != session->join(channel_id))
           {
             std::cerr << "Join failed!" << std::endl;
           }
