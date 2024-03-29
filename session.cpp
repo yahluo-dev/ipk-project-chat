@@ -7,6 +7,8 @@
 #include <arpa/inet.h>
 #include "sender.h"
 #include "receiver.h"
+#include "tcp_receiver.h"
+#include "tcp_sender.h"
 
 std::condition_variable inbox_cv;
 std::mutex inbox_mutex;
@@ -24,15 +26,12 @@ void Session::set_receiver_ex()
 void Session::notify_incoming(Message *message)
 {
   std::lock_guard<std::mutex> lg(inbox_mutex);
-
   if (message->code == CODE_MSG)
   {
     auto msg_message = dynamic_cast<MsgMessage *>(message);
     std::cout << msg_message->display_name << ": " << msg_message->message_contents << std::endl;
   }
-
   inbox.push_back(message);
-
   std::cerr << "Notifying inbox" << std::endl;
   inbox_cv.notify_one();
 }
@@ -46,23 +45,9 @@ void *get_in_addr(struct sockaddr *sa)
   return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-void Session::update_port(const std::string &port)
-{
-  struct addrinfo hints = {0};
-  server_addrinfo = nullptr;
-  hints.ai_family = AF_INET;
-  hints.ai_socktype = SOCK_DGRAM;
-
-  int rv;
-  if (0 != (rv = getaddrinfo(hostname.c_str(), port.c_str(), &hints, &server_addrinfo)))
-  {
-    std::cerr << "getaddrinfo: " << gai_strerror(rv);
-  }
-
-  sender->server_addrinfo = server_addrinfo;
-}
-
-Session::Session(const std::string &_hostname, const std::string& port, unsigned int _max_retr, std::chrono::milliseconds _timeout)
+UDPSession::UDPSession(const std::string &_hostname, const std::string& port, unsigned int _max_retr,
+                       std::chrono::milliseconds _timeout) : Session(_hostname),
+                       max_retr(_max_retr), timeout(_timeout)
 {
   int rv;
   struct addrinfo hints = {0};
@@ -70,8 +55,6 @@ Session::Session(const std::string &_hostname, const std::string& port, unsigned
   struct addrinfo *p;
   hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_DGRAM;
-  hostname = _hostname;
-  max_retr = _max_retr;
 
   if (0 != (rv = getaddrinfo(hostname.c_str(), port.c_str(), &hints, &server_addrinfo)))
   {
@@ -88,15 +71,38 @@ Session::Session(const std::string &_hostname, const std::string& port, unsigned
 
     break;
   }
-
-  timeout = _timeout;
-
   sender = new UDPSender(client_socket, server_addrinfo, _max_retr, timeout, this);
-  receiver = new UDPReceiver(client_socket, this);
+  receiving_thread = std::jthread(UDPReceiver::receive, this, client_socket, dynamic_cast<UDPSender *>(sender));
+}
 
-  receiving_thread = std::jthread(UDPReceiver::receive, this, client_socket, sender);
+TCPSession::TCPSession(const std::string &hostname, const std::string& port) : Session(hostname)
+{
+  struct addrinfo hints = {0};
+  int rv;
+  struct addrinfo *p;
+  if (0 != (rv = getaddrinfo(hostname.c_str(), port.c_str(), &hints, &server_addrinfo)))
+  {
+    std::cerr << "getaddrinfo: " << gai_strerror(rv);
+  }
 
-  message_id = 1;
+  for(p = server_addrinfo; p != NULL; p = p->ai_next) {
+    if ((client_socket = socket(p->ai_family, p->ai_socktype,
+                         p->ai_protocol)) == -1) {
+      perror("client: socket");
+      continue;
+    }
+
+    if (connect(client_socket, p->ai_addr, p->ai_addrlen) == -1) {
+      close(client_socket);
+      perror("client: connect");
+      continue;
+    }
+
+    break;
+  }
+
+  sender = new TCPSender(client_socket, this);
+  receiving_thread = std::jthread(TCPReceiver::receive, this, client_socket);
 }
 
 Session::~Session()
@@ -160,30 +166,73 @@ session_state_t Session::get_state()
   return state;
 }
 
-int Session::auth(const std::string &_username, const std::string &_secret,
-                  const std::string &_display_name)
+void UDPSession::wait_for_reply()
 {
   std::unique_lock ul(inbox_mutex);
+
+  if(!inbox_cv.wait_for(ul, timeout, [] { return !inbox.empty(); }))
+  {
+    throw ConnectionFailed();
+  }
+}
+
+void TCPSession::wait_for_reply()
+{
+  std::unique_lock ul(inbox_mutex);
+  inbox_cv.wait(ul, [] { return !inbox.empty(); });
+  // Will wait indefinetely for a reply
+}
+
+int TCPSession::auth(const std::string &_username, const std::string &_secret,
+                  const std::string &_display_name)
+{
 
   if (state != STATE_START)
   {
     std::cout << "Already authenticated." << std::endl;
+    return 0;
   }
 
   username = _username;
   display_name = _display_name;
   secret = _secret;
 
-  MessageWithId *message = new AuthMessage(username, secret, display_name, message_id);
-  sender->send_msg(message);
-
-  // Wait for REPLY
+  sender->send_msg(new AuthMessage(username, secret, display_name, message_id));
   state = STATE_AUTH;
 
-  if(!inbox_cv.wait_for(ul, timeout, [] { return !inbox.empty(); }))
+  wait_for_reply();
+
+  auto reply = dynamic_cast<ReplyMessage *>(inbox[0]); // May get an unexpected type?
+  inbox.pop_back();
+
+  if (reply->result != 1)
   {
-    throw ConnectionFailed();
+    state = STATE_START;
+    return 1;
   }
+
+  message_id++;
+  state = STATE_OPEN;
+  return 0; // OK
+}
+int UDPSession::auth(const std::string &_username, const std::string &_secret,
+                  const std::string &_display_name)
+{
+
+  if (state != STATE_START)
+  {
+    std::cout << "Already authenticated." << std::endl;
+    return 0;
+  }
+
+  username = _username;
+  display_name = _display_name;
+  secret = _secret;
+
+  sender->send_msg(new AuthMessage(username, secret, display_name, message_id));
+  state = STATE_AUTH;
+
+  wait_for_reply();
 
   auto reply = dynamic_cast<ReplyMessage *>(inbox[0]); // May get an unexpected type?
   inbox.pop_back();
@@ -199,6 +248,6 @@ int Session::auth(const std::string &_username, const std::string &_secret,
   }
 
   message_id++;
-
+  state = STATE_OPEN;
   return 0; // OK
 }

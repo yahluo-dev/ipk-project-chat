@@ -13,23 +13,33 @@ enum sender_state_t
   STATE_IDLE
 };
 
-class UDPSender
+class Sender
+{
+protected:
+  static volatile sender_state_t state;
+  Session *session;
+  int sock;
+public:
+  Sender() = default;
+  virtual void send_msg(MessageWithId *msg);
+};
+
+class UDPSender : public Sender
 {
 private:
-  int sock;
   unsigned int max_retr;
   std::vector<ConfirmMessage *> confirm_inbox;
-  static volatile sender_state_t state;
   MessageWithId *last_sent;
-  Session *session;
   std::chrono::milliseconds timeout;
 public:
   struct addrinfo *server_addrinfo;
   UDPSender(int _sock, struct addrinfo *server_addrinfo, unsigned int _max_retr,
             std::chrono::milliseconds _timeout, Session *_session);
   void notify_confirm(ConfirmMessage *msg);
-  void send_msg(MessageWithId *msg);
   void confirm(uint16_t ref_message_id);
+  void send_msg(MessageWithId *msg) override;
+
+  void update_addrinfo(const std::string &hostname, const std::string &port);
 };
 
 #endif // SENDER_H

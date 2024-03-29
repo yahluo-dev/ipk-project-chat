@@ -22,6 +22,7 @@ class Message
   public:
     uint8_t code;
     virtual std::string serialize();
+    virtual std::string make_tcp();
     virtual ~Message();
 };
 
@@ -36,11 +37,12 @@ class ConfirmMessage : public Message
 
 class MessageWithId : public Message
 {
-  private:
+  protected:
+    uint16_t message_id;
   public:
+    uint16_t get_message_id();
     MessageWithId();
     MessageWithId(message_code_t _code, int _message_id);
-    uint16_t message_id;
     ~MessageWithId() override;
 };
 
@@ -66,6 +68,7 @@ class AuthMessage : public MessageWithId
         std::string _secret, std::string _display_name, uint16_t _message_id);
     std::string serialize() override;
     ~AuthMessage() override;
+    std::string make_tcp();
 };
 
 class JoinMessage : public MessageWithId
@@ -76,6 +79,7 @@ class JoinMessage : public MessageWithId
     std::string display_name;
     JoinMessage(uint16_t _message_id, std::string _channel_id, std::string _display_name);
     std::string serialize() override;
+    std::string make_tcp();
 };
 
 class MsgMessage : public MessageWithId
@@ -87,6 +91,7 @@ class MsgMessage : public MessageWithId
     MsgMessage(uint16_t _message_id, std::string _display_name,
         std::string _message_contents);
     std::string serialize() override;
+    std::string make_tcp();
 };
 
 class ErrMessage : public MessageWithId
@@ -97,6 +102,7 @@ class ErrMessage : public MessageWithId
     std::string message_contents;
     ErrMessage(uint16_t _message_id, std::string _display_name,
         std::string _message_contents);
+    std::string make_tcp();
 };
 
 class ByeMessage : public MessageWithId
@@ -105,6 +111,7 @@ class ByeMessage : public MessageWithId
   public:
     explicit ByeMessage(uint16_t _message_id);
     std::string serialize() override;
+    std::string make_tcp();
 };
 
 class UnknownMessage : public Message

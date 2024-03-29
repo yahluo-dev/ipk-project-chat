@@ -7,16 +7,11 @@
 #include <cerrno>
 #include <cstring>
 #include <memory>
+#include <arpa/inet.h>
 
 #define RECVMESSAGE_MAXLEN 2048
 
-UDPReceiver::UDPReceiver()
-{
-  client_socket = -1;
-  session = nullptr;
-}
-
-void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
+void UDPReceiver::receive(UDPSession *session, int sock, UDPSender *sender)
 {
   char buffer[RECVMESSAGE_MAXLEN] = {0};
   struct msghdr msg = {0}; // GCC doesn't like this, C-style
@@ -47,12 +42,17 @@ void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
     }
     catch (...)
     {
-      session->set_receiver_ex();
+      // FIXME
+      // session->set_receiver_ex();
       return;
     }
     // TODO: Keep track of retransmissions from server
 
-    session->update_port(std::to_string(ntohs(client_addr.sin_port)));
+    char client_addr_str[INET_ADDRSTRLEN] = {0};
+    inet_ntop(AF_INET, &client_addr.sin_addr, client_addr_str, INET_ADDRSTRLEN);
+
+    std::cout << "DEBUG::client_addr_str=" << std::string(client_addr_str) << std::endl;
+    sender->update_addrinfo(std::string(client_addr_str), std::to_string(ntohs(client_addr.sin_port)));
 
     std::string binary_message = std::string(buffer, got_bytes);
 
@@ -67,14 +67,8 @@ void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
     {
       session->notify_incoming(parsed_message);
 
-      sender->confirm(dynamic_cast<MessageWithId *>(parsed_message)->message_id);
+      sender->confirm(dynamic_cast<MessageWithId *>(parsed_message)->get_message_id());
     }
     // Notify session
   }
-}
-
-UDPReceiver::UDPReceiver(int sock, Session *_session)
-{
-  client_socket = sock;
-  session = _session;
 }

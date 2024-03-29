@@ -6,6 +6,7 @@
 std::string Message::serialize()
 {
   std::cerr << "Virtual base method called!" << std::endl;
+  std::flush(std::cout);
   throw NotImplemented();
 }
 
@@ -17,6 +18,11 @@ MessageWithId::~MessageWithId() noexcept
 {
 }
 
+uint16_t MessageWithId::get_message_id()
+{
+  return message_id;
+}
+
 AuthMessage::~AuthMessage() noexcept
 {
 }
@@ -25,6 +31,14 @@ ConfirmMessage::ConfirmMessage(uint16_t _ref_message_id)
   code = CODE_CONFIRM;
   ref_message_id = _ref_message_id;
 }
+
+std::string Message::make_tcp()
+{
+  std::cerr << "Virtual base method called!" << std::endl;
+  std::flush(std::cout);
+  throw NotImplemented();
+}
+
 std::string ConfirmMessage::serialize()
 {
   std::string binary_message = std::string(1u, CODE_CONFIRM);
@@ -42,6 +56,20 @@ AuthMessage::AuthMessage(std::string _username,
   secret = _secret;
   display_name = _display_name;
   message_id = _message_id;
+}
+
+std::string AuthMessage::make_tcp()
+{
+  std::string tcp_message;
+  tcp_message += "AUTH";
+  tcp_message += " ";
+  tcp_message += username;
+  tcp_message += " as ";
+  tcp_message += display_name;
+  tcp_message += " USING ";
+  tcp_message += secret;
+  tcp_message += "\r\n";
+  return tcp_message;
 }
 
 std::string AuthMessage::serialize()
@@ -78,6 +106,18 @@ JoinMessage::JoinMessage(uint16_t _message_id, std::string _channel_id,
   display_name = _display_name;
 }
 
+std::string JoinMessage::make_tcp()
+{
+  std::string tcp_message;
+  tcp_message += "JOIN";
+  tcp_message += " ";
+  tcp_message += channel_id;
+  tcp_message += " AS ";
+  tcp_message += display_name;
+  tcp_message += "\r\n";
+  return tcp_message;
+}
+
 std::string JoinMessage::serialize()
 {
   std::string binary_message = std::string(1u, CODE_JOIN);
@@ -98,6 +138,18 @@ MsgMessage::MsgMessage(uint16_t _message_id, std::string _display_name,
   message_id = _message_id;
   display_name = _display_name;
   message_contents = _message_contents;
+}
+
+std::string MsgMessage::make_tcp()
+{
+  std::string tcp_message;
+  tcp_message += "MSG FROM";
+  tcp_message += " ";
+  tcp_message += display_name;
+  tcp_message += " IS ";
+  tcp_message += message_contents;
+  tcp_message += "\r\n";
+  return tcp_message;
 }
 
 std::string MsgMessage::serialize()
@@ -122,10 +174,38 @@ ErrMessage::ErrMessage(uint16_t _message_id, std::string _display_name,
   message_contents = _message_contents;
 }
 
+std::string ErrMessage::make_tcp()
+{
+  std::string tcp_message;
+  tcp_message += "ERR FROM";
+  tcp_message += " ";
+  tcp_message += display_name;
+  tcp_message += " IS ";
+  tcp_message += message_contents;
+  tcp_message += "\r\n";
+  return tcp_message;
+}
+
 ByeMessage::ByeMessage(uint16_t _message_id)
 {
   code = CODE_BYE;
   message_id = _message_id;
+}
+
+std::string ByeMessage::make_tcp()
+{
+  std::string tcp_message;
+  tcp_message += "BYE";
+  tcp_message += "\r\n";
+  return tcp_message;
+}
+
+std::string ByeMessage::serialize()
+{
+  std::string binary_message = std::string(1u, (char)CODE_BYE);
+  uint16_t net_msg_id = htons(message_id);
+  binary_message += std::string((char *)&net_msg_id, sizeof(uint16_t));
+  return binary_message;
 }
 
 UnknownMessage::UnknownMessage(uint8_t _message_code)
@@ -142,12 +222,4 @@ MessageWithId::MessageWithId(message_code_t _code, int _message_id)
 MessageWithId::MessageWithId()
 {
   message_id = -1;
-}
-
-std::string ByeMessage::serialize()
-{
-  std::string binary_message = std::string(1u, (char)CODE_BYE);
-  uint16_t net_msg_id = htons(message_id);
-  binary_message += std::string((char *)&net_msg_id, sizeof(uint16_t));
-  return binary_message;
 }

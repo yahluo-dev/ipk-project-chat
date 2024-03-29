@@ -3,21 +3,17 @@
 
 #include <thread>
 #include "server.h"
+#include "session.h"
 
-class UDPServer; // TODO: Remove this, circ dep
-class Session;
+class Sender; // TODO: Remove this, circ dep
+class UDPSession;
 
 class UDPReceiver
 {
-  private:
-    int client_socket;
-    std::thread receiving_thread;
-    Session *session;
-  public:
-    static void receive(Session *session, int sock, UDPSender *sender);
-    UDPReceiver();
-    UDPReceiver(int sock, Session *session);
-    ~UDPReceiver();
+public:
+  static void receive(UDPSession *session, int sock, UDPSender *sender);
+  UDPReceiver() = default;
+  ~UDPReceiver() = default;
 };
 
 #endif // RECEIVER_H

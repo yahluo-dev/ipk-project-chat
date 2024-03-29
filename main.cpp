@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
   std::string proto_str;
 
   Protocol proto = NONE;
-  unsigned int udp_timeout = 5000;
+  std::chrono::milliseconds udp_timeout(5000);
   unsigned int udp_max_retr = 3;
   int opt_char;
   while ((opt_char = getopt(argc, argv, "t:s:p:d:r:h")) != -1)
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
           std::cerr << "-d: Timeout must be positive!" << std::endl;
           exit(1);
         }
-        udp_timeout = arg_val;
+        udp_timeout = std::chrono::milliseconds(arg_val);
         break;
       }
       case 'r':
@@ -86,17 +86,22 @@ int main(int argc, char *argv[])
     std::cerr << "HOSTNAME must be supplied!" << std::endl;
     exit(1);
   }
-  UDPClient *client;
 
-  if (proto == UDP) client = new UDPClient(server_hostname, port_number, udp_timeout, udp_max_retr);
+  Session *session;
+
+  Client *client;
+
+  if (proto == UDP) session = new UDPSession(server_hostname, port_number, udp_max_retr, udp_timeout);
   else if (proto == TCP)
   {
-    throw NotImplemented();
+    session = new TCPSession(server_hostname, port_number);
   }
   else
   {
     std::cerr << "PROTOCOL must be supplied!" << std::endl;
   }
+
+  client = new Client(session);
 
   std::cout << "Use /help to get help. Exit with ^D." << std::endl;
 

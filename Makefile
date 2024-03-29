@@ -14,7 +14,7 @@ CXXFLAGS += -std=c++20
 debug: CXXFLAGS += $(debug_flags)
 debug: ipk24-chat.out
 
-ipk24-chat.out: main.o client.o session.o exception.o message_factory.o message.o receiver.o sender.o
+ipk24-chat.out: main.o client.o session.o exception.o message_factory.o message.o receiver.o sender.o tcp_sender.o tcp_receiver.o tcp_message_factory.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 main.o: main.cpp
@@ -54,6 +54,15 @@ receiver.o: receiver.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
 sender.o: sender.cpp
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
+
+tcp_receiver.o: tcp_receiver.cpp
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
+
+tcp_sender.o: tcp_sender.cpp
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
+
+tcp_message_factory.o: tcp_message_factory.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
 clean:

@@ -3,12 +3,11 @@
 #include <iostream>
 #include <sstream>
 #include <iterator>
-#include <chrono>
 #include "exception.h"
 
 std::regex username_regex("[a-zA-Z0-9-]{1,20}", std::regex_constants::ECMAScript);
 std::regex secret_regex("[a-zA-Z0-9-]{1,128}", std::regex_constants::ECMAScript);
-std::regex displayname_regex(R"([!-~]{1,20})", std::regex_constants::ECMAScript);
+std::regex display_name_regex(R"([!-~]{1,20})", std::regex_constants::ECMAScript);
 std::regex message_content_regex(R"([ -~]{1,1400})", std::regex_constants::ECMAScript);
 
 const char *help =  "Usage:\n"
@@ -17,16 +16,7 @@ const char *help =  "Usage:\n"
                     "\t/rename DISPLAYNAME - Change current display name.\n"
                     "\t/help - Show this message.\n";
 
-
-UDPClient::UDPClient(std::string hostname, std::string port, unsigned int _timeout, unsigned int _udp_max_retr)
-{
-  std::chrono::milliseconds timeout_ms(_timeout);
-
-  session = new Session(hostname, port, _udp_max_retr,
-                        timeout_ms);
-}
-
-void UDPClient::repl()
+void Client::repl()
 {
   std::string input;
   while(true)
@@ -65,7 +55,7 @@ void UDPClient::repl()
         }
         std::string username = command_args[1];
         std::string secret = command_args[2];
-        std::string displayname = command_args[3];
+        std::string display_name = command_args[3];
 
         if (!std::regex_match(username, username_regex))
         {
@@ -77,7 +67,7 @@ void UDPClient::repl()
           std::cerr << "Secret must match [a-zA-Z0-9-]+." << std::endl;
           continue;
         }
-        else if (!std::regex_match(displayname, displayname_regex))
+        else if (!std::regex_match(display_name, display_name_regex))
         {
           std::cerr << "Display name must match [\\x21-\\x7e]+." << std::endl;
           continue;
@@ -85,7 +75,7 @@ void UDPClient::repl()
 
         std::cout << "Authenticating..." << std::endl;
 
-        if (0 != session->auth(username, secret, displayname))
+        if (0 != session->auth(username, secret, display_name))
         {
           std::cerr << "Authentication failed." << std::endl;
           continue;
@@ -124,9 +114,9 @@ void UDPClient::repl()
           continue;
         }
 
-        std::string displayname = command_args[1];
+        std::string display_name = command_args[1];
 
-        if (0 != session->rename(displayname))
+        if (0 != session->rename(display_name))
         {
           std::cerr << "Rename failed!" << std::endl;
         }

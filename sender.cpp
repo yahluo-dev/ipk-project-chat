@@ -12,7 +12,14 @@
 std::condition_variable confirm_cv;
 std::mutex confirm_mutex;
 
-volatile sender_state_t UDPSender::state;
+std::mutex addrinfo_mutex;
+
+volatile sender_state_t Sender::state;
+
+void Sender::send_msg(MessageWithId *msg)
+{
+  throw NotImplemented();
+}
 
 UDPSender::UDPSender(int _sock, struct addrinfo *_server_addrinfo, unsigned int _max_retr,
                      std::chrono::milliseconds _timeout, Session *_session)
@@ -32,20 +39,37 @@ void UDPSender::notify_confirm(ConfirmMessage *msg)
 
   // Are we expecting a confirm?
   if (state == STATE_WAITING) {
-    if (msg->ref_message_id < last_sent->message_id) {
+    if (msg->ref_message_id < last_sent->get_message_id()) {
       // Must be a duplicate or out of order
       return;
-    } else if (msg->ref_message_id == last_sent->message_id) {
+    } else if (msg->ref_message_id == last_sent->get_message_id()) {
       state = STATE_IDLE;
       confirm_cv.notify_one();
-    } else if (msg->ref_message_id > last_sent->message_id) {
+    } else if (msg->ref_message_id > last_sent->get_message_id()) {
       throw std::runtime_error("Got confirm for message not yet sent!");
     }
   }
 }
 
+void UDPSender::update_addrinfo(const std::string &hostname, const std::string &port)
+{
+  std::lock_guard<std::mutex> addrinfo_lock(addrinfo_mutex);
+  struct addrinfo hints = {0};
+  server_addrinfo = nullptr;
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_DGRAM;
+
+  int rv;
+  if (0 != (rv = getaddrinfo(hostname.c_str(), port.c_str(), &hints, &server_addrinfo)))
+  {
+    std::cerr << "getaddrinfo: " << gai_strerror(rv);
+  }
+
+}
+
 void UDPSender::confirm(uint16_t ref_message_id)
 {
+  std::lock_guard<std::mutex> addrinfo_lock(addrinfo_mutex);
   std::unique_ptr<ConfirmMessage> confirmation = std::make_unique<ConfirmMessage>(ref_message_id);
   std::string serialized = confirmation->serialize();
 
@@ -69,12 +93,15 @@ void UDPSender::send_msg(MessageWithId *msg)
   {
     std::cout << "Sending" << std::endl;
 
-    if (-1 == sendto(sock, serialized.data(), serialized.size(), 0,
-                     server_addrinfo->ai_addr, server_addrinfo->ai_addrlen))
     {
-      printf("Send message failed: %s\n", strerror(errno));
-      fflush(stdout);
-      throw ConnectionFailed();
+      std::lock_guard<std::mutex> addrinfo_lock(addrinfo_mutex);
+      if (-1 == sendto(sock, serialized.data(), serialized.size(), 0,
+                       server_addrinfo->ai_addr, server_addrinfo->ai_addrlen))
+      {
+        printf("Send message failed: %s\n", strerror(errno));
+        fflush(stdout);
+        throw ConnectionFailed();
+      }
     }
 
     // Wait for confirm
@@ -97,6 +124,5 @@ void UDPSender::send_msg(MessageWithId *msg)
   {
     throw ConnectionFailed();
   }
-
   // Message sent successfully
 }

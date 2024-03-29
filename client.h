@@ -10,13 +10,13 @@
 /**
  * Class for communicating with the user via a REPL and interpreting commands.
  */
-class UDPClient
+class Client
 {
-  private:
-    Session *session;
-  public:
-    UDPClient(std::string hostname, std::string port, unsigned int timeout, unsigned int udp_max_retr);
-    void repl();
+protected:
+  Session *session;
+public:
+  void repl();
+  explicit Client(Session *_session) : session(_session) {};
 };
 
 #endif // CLIENT_H
