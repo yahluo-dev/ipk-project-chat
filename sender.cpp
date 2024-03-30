@@ -37,7 +37,7 @@ void UDPSender::notify_confirm(ConfirmMessage *msg)
 {
   std::lock_guard<std::mutex> lg(confirm_mutex);
 
-  // Are we expecting a confirm?
+  // Are we expecting a confirmation?
   if (state == STATE_WAITING) {
     if (msg->ref_message_id < last_sent->get_message_id()) {
       // Must be a duplicate or out of order
@@ -46,7 +46,7 @@ void UDPSender::notify_confirm(ConfirmMessage *msg)
       state = STATE_IDLE;
       confirm_cv.notify_one();
     } else if (msg->ref_message_id > last_sent->get_message_id()) {
-      throw std::runtime_error("Got confirm for message not yet sent!");
+      state = STATE_SENDER_ERROR;
     }
   }
 }
@@ -109,15 +109,16 @@ void UDPSender::send_msg(MessageWithId *msg)
     //delete last_sent;
     last_sent = msg;
     if (confirm_cv.wait_for(ul, timeout,
-                                    [] { return UDPSender::state == STATE_IDLE; }))
+                                    [] { return UDPSender::state != STATE_WAITING; }))
       {
         break;
       }
-    if (STATE_INTERNAL_ERROR == session->get_state())
+    if (state == STATE_SENDER_ERROR)
     {
-      return;
+      throw BadConfirm();
     }
   }
+
   if (retries == 0)
   {
     throw ConnectionFailed();

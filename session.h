@@ -4,7 +4,6 @@
 #include <string>
 #include <cstdint>
 #include <netinet/in.h>
-#include "server.h"
 #include "message.h"
 #include <vector>
 #include <thread>
@@ -22,7 +21,8 @@ enum session_state_t
   STATE_AUTH,
   STATE_OPEN,
   STATE_ERROR,
-  STATE_INTERNAL_ERROR
+  STATE_INTERNAL_ERROR,
+  STATE_END
 };
 
 class Session
@@ -35,14 +35,14 @@ protected:
   int client_socket;
   uint16_t message_id;
   static session_state_t state;
-  std::jthread receiving_thread;
   static std::vector<Message *> inbox;
   std::exception_ptr receiver_ex;
 public:
+  std::jthread receiving_thread;
   Session(const std::string &_hostname) : hostname(_hostname),
       server_addrinfo(nullptr), receiver(nullptr), sender(nullptr),
       client_socket(0), message_id(0){};
-  ~Session();
+  virtual ~Session();
   virtual void sendmsg(const std::string &contents);
   virtual void join(const std::string &channel_id);
   virtual void rename(const std::string &new_name);

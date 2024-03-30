@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 
   client = new Client(session);
 
-  std::cout << "Use /help to get help. Exit with ^D." << std::endl;
+  std::cout << "Use /help to get help. Exit with ^D or ^C." << std::endl;
 
   try
   {

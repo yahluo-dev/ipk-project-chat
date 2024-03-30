@@ -5,7 +5,8 @@
 
 std::string Message::serialize()
 {
-  std::cerr << "Virtual base method called!" << std::endl;
+  std::cerr << "serialize: Virtual base method called!" << std::endl;
+  std::flush(std::cerr);
   std::flush(std::cout);
   throw NotImplemented();
 }
@@ -34,7 +35,7 @@ ConfirmMessage::ConfirmMessage(uint16_t _ref_message_id)
 
 std::string Message::make_tcp()
 {
-  std::cerr << "Virtual base method called!" << std::endl;
+  std::cerr << "make_tcp: Virtual base method called!" << std::endl;
   std::flush(std::cout);
   throw NotImplemented();
 }
@@ -172,6 +173,19 @@ ErrMessage::ErrMessage(uint16_t _message_id, std::string _display_name,
   message_id = _message_id;
   display_name = _display_name;
   message_contents = _message_contents;
+}
+
+std::string ErrMessage::serialize()
+{
+  std::string binary_message = std::string(1u, CODE_ERR);
+  uint16_t net_msg_id = ntohs(message_id);
+  binary_message += std::string((char *)&net_msg_id, sizeof(uint16_t));
+  binary_message += display_name;
+  binary_message += std::string(1u, '\x00');
+  binary_message += message_contents;
+  binary_message += std::string(1u, '\x00');
+
+  return binary_message;
 }
 
 std::string ErrMessage::make_tcp()

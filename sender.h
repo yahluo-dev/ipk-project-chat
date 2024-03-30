@@ -10,7 +10,8 @@ class Session;
 enum sender_state_t
 {
   STATE_WAITING,
-  STATE_IDLE
+  STATE_IDLE,
+  STATE_SENDER_ERROR
 };
 
 class Sender

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iterator>
 #include "exception.h"
+#include <csignal>
 
 std::regex username_regex("[a-zA-Z0-9-]{1,20}", std::regex_constants::ECMAScript);
 std::regex secret_regex("[a-zA-Z0-9-]{1,128}", std::regex_constants::ECMAScript);
@@ -16,12 +17,56 @@ const char *help =  "Usage:\n"
                     "\t/rename DISPLAYNAME - Change current display name.\n"
                     "\t/help - Show this message.\n";
 
+Session *Client::session;
+bool Client::interrupted = false;
+
+void Client::ctrlc_handler(int signal)
+{
+  if (interrupted)
+  {
+    std::cout << "Force quitting." << std::endl;
+    //session->receiving_thread.join();
+    delete session;
+    exit(1);
+  }
+  interrupted = true;
+  Client::session->bye();
+  exit(0);
+}
+
+Client::Client(Session *_session)
+{
+  session = _session;
+}
+
+void Client::print_prompt()
+{
+  std::cout << "IPK24-CHAT ";
+  switch(session->get_state())
+  {
+    case STATE_ERROR:
+      std::cout << "[ERROR!]";
+      break;
+    default:
+      break;
+  }
+  std::cout << "> ";
+};
+
 void Client::repl()
 {
+  std::signal(SIGINT, Client::ctrlc_handler);
+
   std::string input;
   while(true)
   {
-    std::cout << "IPK24-CHAT> ";
+    if (interrupted) return;
+    if (STATE_INTERNAL_ERROR == session->get_state() ||
+        STATE_ERROR == session->get_state())
+    {
+      return;
+    }
+    print_prompt();
     std::getline(std::cin, input);
     if (std::cin.eof())
     {
@@ -29,11 +74,6 @@ void Client::repl()
       std::cout << "Bye!" << std::endl;
       std::cout << std::endl;
       return;
-    }
-
-    if (STATE_INTERNAL_ERROR == session->get_state())
-    {
-      throw ConnectionFailed();
     }
 
     if (input[0] == '/')

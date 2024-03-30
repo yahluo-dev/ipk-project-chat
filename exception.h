@@ -39,4 +39,10 @@ public:
   UnexpectedMessage() : std::runtime_error("Got unexpected message from server") {};
 };
 
+class BadConfirm : public std::runtime_error
+{
+public:
+  BadConfirm() : std::runtime_error("Got unexpected ref_message_id!") {};
+};
+
 #endif // EXCEPTION_H

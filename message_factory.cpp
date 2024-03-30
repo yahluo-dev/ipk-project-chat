@@ -92,7 +92,7 @@ Message *MessageFactory::create(std::string message)
     default:
     {
       throw std::invalid_argument("Packet with unexpected code received.");
-      //return new UnknownMessage(code);
+      return new UnknownMessage(code);
     }
   }
 }

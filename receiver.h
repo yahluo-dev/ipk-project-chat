@@ -2,11 +2,11 @@
 #define RECEIVER_H
 
 #include <thread>
-#include "server.h"
 #include "session.h"
 
 class Sender; // TODO: Remove this, circ dep
 class UDPSession;
+class UDPSender;
 
 class UDPReceiver
 {

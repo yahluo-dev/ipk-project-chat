@@ -37,6 +37,7 @@ void Session::notify_incoming(Message *message)
     auto *err_message = dynamic_cast<ErrMessage *>(message);
     std::cerr << "ERR FROM " << err_message->display_name <<
         ": " << err_message->message_contents << std::endl;
+    sender->send_msg(new ByeMessage(message_id++));
   }
   else if (message->code == CODE_UNKNOWN)
   {
@@ -112,6 +113,7 @@ TCPSession::TCPSession(const std::string &hostname, const std::string& port) : S
 
 Session::~Session()
 {
+  receiving_thread.join();
   close(client_socket);
 }
 
@@ -124,15 +126,18 @@ void Session::sendmsg(const std::string &_contents)
   }
 
   auto message = new MsgMessage(message_id++, display_name, _contents);
-  sender->send_msg(message);
+  try
+  {
+    sender->send_msg(message);
+  }
+  catch (BadConfirm &e)
+  {
+    state = STATE_ERROR;
+  }
 }
 
 void Session::bye()
 {
-  if (state == STATE_START)
-  {
-    return;
-  }
   auto *bye_message = new ByeMessage(message_id++);
   sender->send_msg(bye_message);
 }
@@ -173,40 +178,44 @@ void UDPSession::wait_for_reply()
 void TCPSession::wait_for_reply()
 {
   std::unique_lock ul(inbox_mutex);
+
   inbox_cv.wait(ul, [] { return !inbox.empty(); });
   // Will wait indefinetely for a reply
 }
 
 void TCPSession::process_reply(ReplyMessage *reply)
 {
-  if (reply->result != 1)
+  if (reply->result == 0)
   {
     std::cout << "Failure: " << reply->message_contents << std::endl;
     state = STATE_START;
     return;
   }
-  std::cout << "Success: " << reply->message_contents << std::endl;
-  state = STATE_OPEN;
+  else
+  {
+    std::cout << "Success: " << reply->message_contents << std::endl;
+    state = STATE_OPEN;
+  }
 }
 
 void UDPSession::process_reply(ReplyMessage *reply)
 {
-  if (reply->ref_message_id != message_id)
+  if (reply->ref_message_id != message_id-1) // Does it match the PREVIOUS message id?
   {
     sender->send_msg(new ErrMessage(message_id++,
                                     display_name, "Reply contains wrong ref_message_id!"));
-    std::cout << "Reply contains wrong ref_message_id!" << std::endl;
+    std::cout << "ERR: Reply contains wrong ref_message_id!" << std::endl;
     state = STATE_ERROR;
     // bye from cient?
     return;
   }
-  else if (reply->result != 1)
+  else if (reply->result == 0)
   {
-    std::cout << "Failure: " << reply->message_contents << std::endl;
+    std::cerr << "Failure: " << reply->message_contents << std::endl;
     state = STATE_START;
     return;
   }
-  std::cout << "Success: " << reply->message_contents << std::endl;
+  std::cerr << "Success: " << reply->message_contents << std::endl;
   state = STATE_OPEN;
 }
 
@@ -216,7 +225,7 @@ void Session::auth(const std::string &_username, const std::string &_secret,
 
   if (state != STATE_START)
   {
-    std::cout << "Already authenticated." << std::endl;
+    std::cout << "ERR: Already authenticated." << std::endl;
     return;
   }
 
@@ -224,7 +233,17 @@ void Session::auth(const std::string &_username, const std::string &_secret,
   display_name = _display_name;
   secret = _secret;
 
-  sender->send_msg(new AuthMessage(username, secret, display_name, message_id++));
+  try
+  {
+    sender->send_msg(new AuthMessage(username, secret, display_name, message_id++));
+  }
+  catch (BadConfirm &e)
+  {
+    state = STATE_ERROR;
+    sender->send_msg(new ErrMessage(message_id++,
+                                    display_name, "Got bad confirm number."));
+    return;
+  }
   state = STATE_AUTH;
 
   wait_for_reply();

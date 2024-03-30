@@ -24,7 +24,7 @@ void TCPReceiver::receive(Session *session, int sock)
     }
     catch (...)
     {
-      // TODO
+      session->set_receiver_ex();
       return;
     }
     std::string raw_message = std::string(buffer, got_bytes);

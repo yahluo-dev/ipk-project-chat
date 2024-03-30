@@ -103,6 +103,7 @@ class ErrMessage : public MessageWithId
     std::string message_contents;
     ErrMessage(uint16_t _message_id, std::string _display_name,
         std::string _message_contents);
+    std::string serialize() override;
     std::string make_tcp();
 };
 

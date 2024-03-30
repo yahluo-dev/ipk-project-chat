@@ -40,7 +40,7 @@ void UDPReceiver::receive(UDPSession *session, int sock, UDPSender *sender)
         throw ConnectionFailed();
       }
     }
-    catch (...)
+    catch (ConnectionFailed &e)
     {
       session->set_receiver_ex();
       return;
@@ -63,9 +63,8 @@ void UDPReceiver::receive(UDPSession *session, int sock, UDPSender *sender)
     }
     else
     {
-      session->notify_incoming(parsed_message);
-
       sender->confirm(dynamic_cast<MessageWithId *>(parsed_message)->get_message_id());
+      session->notify_incoming(parsed_message);
     }
     // Notify session
   }

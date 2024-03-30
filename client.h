@@ -13,10 +13,13 @@
 class Client
 {
 protected:
-  Session *session;
+  static Session *session;
+  static bool interrupted;
+  void print_prompt();
 public:
   void repl();
-  explicit Client(Session *_session) : session(_session) {};
+  explicit Client(Session *_session);
+  static void ctrlc_handler(int signal);
 };
 
 #endif // CLIENT_H
