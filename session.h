@@ -41,18 +41,19 @@ protected:
 public:
   Session(const std::string &_hostname) : hostname(_hostname),
       server_addrinfo(nullptr), receiver(nullptr), sender(nullptr),
-      client_socket(0), message_id(1){};
+      client_socket(0), message_id(0){};
   ~Session();
-  virtual int sendmsg(const std::string &contents);
-  virtual int join(const std::string &channel_id);
-  virtual int rename(const std::string &new_name);
-  virtual int auth(const std::string &_username, const std::string &_secret, const std::string &_displayname) = 0;
+  virtual void sendmsg(const std::string &contents);
+  virtual void join(const std::string &channel_id);
+  virtual void rename(const std::string &new_name);
+  void auth(const std::string &_username, const std::string &_secret, const std::string &_displayname);
   virtual void set_receiver_ex();
   virtual void bye();
 
   virtual session_state_t get_state();
   void notify_incoming(Message *message);
   virtual void wait_for_reply() = 0;
+  virtual void process_reply(ReplyMessage *reply) = 0;
 };
 
 class UDPSession : public Session
@@ -65,8 +66,7 @@ public:
   UDPSession(const std::string &hostname, const std::string& port,
              unsigned int _max_retr, std::chrono::milliseconds _timeout);
   void update_port(const std::string &port);
-
-  int auth(const std::string &_username, const std::string &_secret, const std::string &_display_name);
+  void process_reply(ReplyMessage *reply) override;
 };
 
 class TCPSession : public Session
@@ -75,6 +75,6 @@ public:
   void wait_for_reply();
   TCPSession(const std::string &hostname, const std::string& port);
 
-  int auth(const std::string &_username, const std::string &_secret, const std::string &_display_name);
+  void process_reply(ReplyMessage *reply) override;
 };
 #endif // SESSION_H

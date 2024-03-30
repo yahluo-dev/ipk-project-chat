@@ -91,8 +91,6 @@ void UDPSender::send_msg(MessageWithId *msg)
 
   for (retries = max_retr; retries > 0; retries--)
   {
-    std::cout << "Sending" << std::endl;
-
     {
       std::lock_guard<std::mutex> addrinfo_lock(addrinfo_mutex);
       if (-1 == sendto(sock, serialized.data(), serialized.size(), 0,

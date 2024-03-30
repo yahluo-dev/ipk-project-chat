@@ -29,20 +29,25 @@ void Session::notify_incoming(Message *message)
   if (message->code == CODE_MSG)
   {
     auto msg_message = dynamic_cast<MsgMessage *>(message);
-    std::cout << msg_message->display_name << ": " << msg_message->message_contents << std::endl;
+    std::cout << std::endl << msg_message->display_name << ": " << msg_message->message_contents << std::endl;
+  }
+  else if (message->code == CODE_ERR)
+  {
+    state = STATE_ERROR;
+    auto *err_message = dynamic_cast<ErrMessage *>(message);
+    std::cerr << "ERR FROM " << err_message->display_name <<
+        ": " << err_message->message_contents << std::endl;
+  }
+  else if (message->code == CODE_UNKNOWN)
+  {
+    state = STATE_ERROR;
+    sender->send_msg(new ErrMessage(message_id++,
+                                    display_name, "Got message with invalid code."));
+    sender->send_msg(new ByeMessage(message_id++));
+    std::cerr << "ERR: Got message with invalid code from server." << std::endl;
   }
   inbox.push_back(message);
-  std::cerr << "Notifying inbox" << std::endl;
   inbox_cv.notify_one();
-}
-
-void *get_in_addr(struct sockaddr *sa)
-{
-  if (sa->sa_family == AF_INET)
-  {
-    return &(((struct sockaddr_in*)sa)->sin_addr);
-  }
-  return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
 UDPSession::UDPSession(const std::string &_hostname, const std::string& port, unsigned int _max_retr,
@@ -110,55 +115,44 @@ Session::~Session()
   close(client_socket);
 }
 
-int Session::sendmsg(const std::string &_contents)
+void Session::sendmsg(const std::string &_contents)
 {
   if (state == STATE_START)
   {
-    throw NotInChannel();
+    std::cerr << "ERR: Not in channel." << std::endl;
+    return;
   }
 
-  if (state != STATE_OPEN)
-  {
-    std::cout << "Not authenticated. Use /auth." << std::endl;
-    std::cout << "DEBUG: state " << state << std::endl;
-  }
-
-  auto message = new MsgMessage(message_id, display_name, _contents);
-  std::cout << "DEBUG: Sending message with contents" << " " << _contents << std::endl;
+  auto message = new MsgMessage(message_id++, display_name, _contents);
   sender->send_msg(message);
-
-  message_id++;
-
-  return 1;
 }
 
 void Session::bye()
 {
-  auto *bye_message = new ByeMessage(message_id);
+  if (state == STATE_START)
+  {
+    return;
+  }
+  auto *bye_message = new ByeMessage(message_id++);
   sender->send_msg(bye_message);
 }
 
-int Session::join(const std::string &_channel_id)
+void Session::join(const std::string &_channel_id)
 {
   if (state == STATE_START)
   {
-    throw NotAuthenticated();
+    std::cerr << "ERR: Not authenticated. Use /auth." << std::endl;
+    return;
   }
 
-  MessageWithId *message = new JoinMessage(message_id, _channel_id, display_name);
+  MessageWithId *message = new JoinMessage(message_id++, _channel_id, display_name);
   sender->send_msg(message);
 
-  // TODO
-
-  message_id++;
-
-  return 0;
 }
 
-int Session::rename(const std::string &_new_name)
+void Session::rename(const std::string &_new_name)
 {
   display_name = _new_name;
-  return 0;
 }
 
 session_state_t Session::get_state()
@@ -183,71 +177,68 @@ void TCPSession::wait_for_reply()
   // Will wait indefinetely for a reply
 }
 
-int TCPSession::auth(const std::string &_username, const std::string &_secret,
-                  const std::string &_display_name)
+void TCPSession::process_reply(ReplyMessage *reply)
 {
-
-  if (state != STATE_START)
-  {
-    std::cout << "Already authenticated." << std::endl;
-    return 0;
-  }
-
-  username = _username;
-  display_name = _display_name;
-  secret = _secret;
-
-  sender->send_msg(new AuthMessage(username, secret, display_name, message_id));
-  state = STATE_AUTH;
-
-  wait_for_reply();
-
-  auto reply = dynamic_cast<ReplyMessage *>(inbox[0]); // May get an unexpected type?
-  inbox.pop_back();
-
   if (reply->result != 1)
   {
+    std::cout << "Failure: " << reply->message_contents << std::endl;
     state = STATE_START;
-    return 1;
+    return;
   }
-
-  message_id++;
+  std::cout << "Success: " << reply->message_contents << std::endl;
   state = STATE_OPEN;
-  return 0; // OK
 }
-int UDPSession::auth(const std::string &_username, const std::string &_secret,
-                  const std::string &_display_name)
+
+void UDPSession::process_reply(ReplyMessage *reply)
 {
-
-  if (state != STATE_START)
-  {
-    std::cout << "Already authenticated." << std::endl;
-    return 0;
-  }
-
-  username = _username;
-  display_name = _display_name;
-  secret = _secret;
-
-  sender->send_msg(new AuthMessage(username, secret, display_name, message_id));
-  state = STATE_AUTH;
-
-  wait_for_reply();
-
-  auto reply = dynamic_cast<ReplyMessage *>(inbox[0]); // May get an unexpected type?
-  inbox.pop_back();
-
   if (reply->ref_message_id != message_id)
   {
-    throw std::runtime_error("Wrong ref message id");
+    sender->send_msg(new ErrMessage(message_id++,
+                                    display_name, "Reply contains wrong ref_message_id!"));
+    std::cout << "Reply contains wrong ref_message_id!" << std::endl;
+    state = STATE_ERROR;
+    // bye from cient?
+    return;
   }
   else if (reply->result != 1)
   {
+    std::cout << "Failure: " << reply->message_contents << std::endl;
     state = STATE_START;
-    return 1;
+    return;
+  }
+  std::cout << "Success: " << reply->message_contents << std::endl;
+  state = STATE_OPEN;
+}
+
+void Session::auth(const std::string &_username, const std::string &_secret,
+                  const std::string &_display_name)
+{
+
+  if (state != STATE_START)
+  {
+    std::cout << "Already authenticated." << std::endl;
+    return;
   }
 
-  message_id++;
-  state = STATE_OPEN;
-  return 0; // OK
+  username = _username;
+  display_name = _display_name;
+  secret = _secret;
+
+  sender->send_msg(new AuthMessage(username, secret, display_name, message_id++));
+  state = STATE_AUTH;
+
+  wait_for_reply();
+
+  if (state == STATE_ERROR)
+  {
+    sender->send_msg(new ErrMessage(message_id++,
+                                    display_name, "REPLY was expected."));
+    throw UnexpectedMessage();
+    return;
+  }
+
+  auto reply = dynamic_cast<ReplyMessage *>(inbox[0]); // May get an unexpected type?
+  inbox.pop_back();
+
+  process_reply(reply);
 }

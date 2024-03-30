@@ -50,7 +50,7 @@ void Client::repl()
       {
         if (command_args.size() != 4)
         {
-          std::cerr << "Invalid usage." << std::endl;
+          std::cerr << "ERR: Invalid usage." << std::endl;
           continue;
         }
         std::string username = command_args[1];
@@ -73,62 +73,37 @@ void Client::repl()
           continue;
         }
 
-        std::cout << "Authenticating..." << std::endl;
-
-        if (0 != session->auth(username, secret, display_name))
-        {
-          std::cerr << "Authentication failed." << std::endl;
-          continue;
-        }
-        std::cerr << "Authentication success." << std::endl;
+        session->auth(username, secret, display_name);
       }
       else if (command_args[0] == "join")
       {
         if (command_args.size() != 2)
         {
-          std::cerr << "Invalid usage." << std::endl;
+          std::cerr << "ERR: Invalid usage." << std::endl;
           continue;
         }
         std::string channel_id = command_args[1];
-        try
-        {
-          if (0 != session->join(channel_id))
-          {
-            std::cerr << "Join failed!" << std::endl;
-          }
-          else
-          {
-            std::cout << "Joined " << channel_id << std::endl;
-          }
-        }
-        catch (NotAuthenticated &e)
-        {
-          std::cout << "Not authenticated. Use /auth." << std::endl;
-        }
+        session->join(channel_id);
       }
       else if (command_args[0] == "rename")
       {
         if (command_args.size() != 2)
         {
-          std::cerr << "Invalid usage." << std::endl;
+          std::cerr << "ERR: Invalid usage." << std::endl;
           continue;
         }
 
         std::string display_name = command_args[1];
-
-        if (0 != session->rename(display_name))
-        {
-          std::cerr << "Rename failed!" << std::endl;
-        }
+        session->rename(display_name);
       }
       else if (command_args[0] == "help")
       {
-        puts(help);
+        std::cout << help << std::endl;
       }
       else
       {
-        std::cerr << "Invalid command: " << command_args[0] <<"." << std::endl;
-        puts(help);
+        std::cerr << "ERR: Invalid command: " << command_args[0] << "." << std::endl;
+        std::cout << help << std::endl;
       }
     }
     else if (input.empty())
@@ -140,17 +115,10 @@ void Client::repl()
       // Is message. Send.
       if (!std::regex_match(input, message_content_regex))
       {
-        std::cerr << "Invalid message content. Only characters from ASCII range \\x20-\\x7e are allowed." << std::endl;
+        std::cerr << "ERR: Invalid message content. Only characters from ASCII range \\x20-\\x7e are allowed." << std::endl;
         continue;
       }
-      try
-      {
-        session->sendmsg(input);
-      }
-      catch (NotInChannel &e)
-      {
-        std::cout << "Cannot send message while not in channel." << std::endl;
-      }
+      session->sendmsg(input);
     }
   }
 }

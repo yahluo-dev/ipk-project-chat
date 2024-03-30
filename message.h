@@ -12,7 +12,8 @@ enum message_code_t
   CODE_JOIN = 0x03,
   CODE_MSG = 0x04,
   CODE_ERR = 0xFE,
-  CODE_BYE = 0xFF
+  CODE_BYE = 0xFF,
+  CODE_UNKNOWN = 0xEE
 };
 
 

@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
   std::string proto_str;
 
   Protocol proto = NONE;
-  std::chrono::milliseconds udp_timeout(5000);
+  std::chrono::milliseconds udp_timeout(250);
   unsigned int udp_max_retr = 3;
   int opt_char;
   while ((opt_char = getopt(argc, argv, "t:s:p:d:r:h")) != -1)

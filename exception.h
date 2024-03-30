@@ -33,4 +33,10 @@ public:
   ReplEof() : std::runtime_error("EOF") {};
 };
 
+class UnexpectedMessage : public std::runtime_error
+{
+public:
+  UnexpectedMessage() : std::runtime_error("Got unexpected message from server") {};
+};
+
 #endif // EXCEPTION_H

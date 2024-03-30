@@ -43,9 +43,6 @@ Message *MessageFactory::create(std::string message)
       uint16_t ref_message_id = *(uint16_t *)generic_message;
       ref_message_id = ntohs(ref_message_id);
       generic_message += sizeof(uint16_t);
-      std::cerr << "DEBUG message_factory: ref_message_id "
-        << std::to_string(ntohs(ref_message_id)) << std::endl;
-
       return new ConfirmMessage(ref_message_id);
     }
     case CODE_REPLY:

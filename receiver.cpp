@@ -42,8 +42,7 @@ void UDPReceiver::receive(UDPSession *session, int sock, UDPSender *sender)
     }
     catch (...)
     {
-      // FIXME
-      // session->set_receiver_ex();
+      session->set_receiver_ex();
       return;
     }
     // TODO: Keep track of retransmissions from server
@@ -51,7 +50,6 @@ void UDPReceiver::receive(UDPSession *session, int sock, UDPSender *sender)
     char client_addr_str[INET_ADDRSTRLEN] = {0};
     inet_ntop(AF_INET, &client_addr.sin_addr, client_addr_str, INET_ADDRSTRLEN);
 
-    std::cout << "DEBUG::client_addr_str=" << std::string(client_addr_str) << std::endl;
     sender->update_addrinfo(std::string(client_addr_str), std::to_string(ntohs(client_addr.sin_port)));
 
     std::string binary_message = std::string(buffer, got_bytes);
