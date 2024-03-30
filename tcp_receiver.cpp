@@ -27,12 +27,10 @@ void TCPReceiver::receive(Session *session, int sock)
       session->set_receiver_ex();
       return;
     }
+
     std::string raw_message = std::string(buffer, got_bytes);
-
     TCPMessageFactory factory = TCPMessageFactory();
-
     Message *parsed_message = factory.create(raw_message);
-
     session->notify_incoming(parsed_message);
   }
 }

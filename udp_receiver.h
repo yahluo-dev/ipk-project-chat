@@ -1,7 +1,6 @@
-#ifndef RECEIVER_H
-#define RECEIVER_H
+#ifndef UDP_RECEIVER_H
+#define UDP_RECEIVER_H
 
-#include <thread>
 #include "session.h"
 
 class Sender; // TODO: Remove this, circ dep
@@ -12,8 +11,6 @@ class UDPReceiver
 {
 public:
   static void receive(UDPSession *session, int sock, UDPSender *sender);
-  UDPReceiver() = default;
-  ~UDPReceiver() = default;
 };
 
-#endif // RECEIVER_H
+#endif // UDP_RECEIVER_H

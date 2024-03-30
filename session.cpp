@@ -5,8 +5,8 @@
 #include <condition_variable>
 #include <mutex>
 #include <arpa/inet.h>
-#include "sender.h"
-#include "receiver.h"
+#include "udp_sender.h"
+#include "udp_receiver.h"
 #include "tcp_receiver.h"
 #include "tcp_sender.h"
 
@@ -113,8 +113,8 @@ TCPSession::TCPSession(const std::string &hostname, const std::string& port) : S
 
 Session::~Session()
 {
-  receiving_thread.join();
-  close(client_socket);
+  //receiving_thread.join(); // FIXME: This is bad, closing a socket
+  close(client_socket);      // while the thread is receiving.
 }
 
 void Session::sendmsg(const std::string &_contents)

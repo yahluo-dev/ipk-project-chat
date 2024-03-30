@@ -7,8 +7,8 @@
 #include "message.h"
 #include <vector>
 #include <thread>
-#include "receiver.h"
-#include "sender.h"
+#include "udp_receiver.h"
+#include "udp_sender.h"
 #include <exception>
 #include <netdb.h>
 
