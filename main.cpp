@@ -8,14 +8,13 @@
 
 #define DEFAULT_PORT "4567"
 
-size_t message_id = 0;
-
 int main(int argc, char *argv[])
 {
+  Session *session;
+  Client *client;
+
   std::string port_number = DEFAULT_PORT;
   std::string server_hostname;
-  std::string proto_str;
-
   Protocol proto = NONE;
   std::chrono::milliseconds udp_timeout(250);
   unsigned int udp_max_retr = 3;
@@ -25,7 +24,8 @@ int main(int argc, char *argv[])
     switch(opt_char)
     {
       case 't':
-        proto_str = optarg;
+      {
+        std::string proto_str = optarg;
         std::transform(proto_str.begin(), proto_str.end(), proto_str.begin(), ::toupper);
         if (proto_str == "TCP") proto = TCP;
         else if (proto_str == "UDP") proto = UDP;
@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
           exit(1);
         }
         break;
+      }
       case 's':
         server_hostname = optarg;
         break;
@@ -81,29 +82,17 @@ int main(int argc, char *argv[])
     }
   }
 
+
   if (server_hostname.empty())
   {
     std::cerr << "HOSTNAME must be supplied!" << std::endl;
     exit(1);
   }
 
-  Session *session;
-
-  Client *client;
-
   if (proto == UDP) session = new UDPSession(server_hostname, port_number, udp_max_retr, udp_timeout);
-  else if (proto == TCP)
-  {
-    session = new TCPSession(server_hostname, port_number);
-  }
-  else
-  {
-    std::cerr << "PROTOCOL must be supplied!" << std::endl;
-  }
-
+  else if (proto == TCP) session = new TCPSession(server_hostname, port_number);
+  else std::cerr << "PROTOCOL must be supplied!" << std::endl;
   client = new Client(session);
-
-  std::cout << "Use /help to get help. Exit with ^D or ^C." << std::endl;
 
   try
   {

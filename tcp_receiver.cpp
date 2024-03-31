@@ -2,6 +2,7 @@
 #include "cstring"
 #include "exception.h"
 #include "tcp_message_factory.h"
+#include "session.h"
 
 #define RECVMESSAGE_MAXLEN 2048
 

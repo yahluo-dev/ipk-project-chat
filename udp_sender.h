@@ -1,7 +1,12 @@
 #ifndef UDP_SENDER_H
 #define UDP_SENDER_H
+
 #include <vector>
+#include <chrono>
+
 #include "sender.h"
+
+class Session;
 
 class UDPSender : public Sender
 {

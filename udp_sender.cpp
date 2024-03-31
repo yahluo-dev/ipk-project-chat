@@ -8,6 +8,7 @@
 #include <memory>
 #include <cstring> // strerrno
 #include <iostream>
+#include "session.h"
 
 std::condition_variable confirm_cv;
 std::mutex confirm_mutex;

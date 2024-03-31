@@ -2,7 +2,6 @@
 #define SENDER_H
 
 #include "message.h"
-#include "session.h"
 
 class Session;
 

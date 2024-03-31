@@ -56,6 +56,7 @@ void Client::print_prompt()
 void Client::repl()
 {
   std::signal(SIGINT, Client::ctrlc_handler);
+  std::cout << "Use /help to get help. Exit with ^D or ^C." << std::endl;
 
   std::string input;
   while(true)

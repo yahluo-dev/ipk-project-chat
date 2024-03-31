@@ -8,10 +8,11 @@
 #include <cstring>
 #include <memory>
 #include <arpa/inet.h>
+#include "session.h"
 
 #define RECVMESSAGE_MAXLEN 2048
 
-void UDPReceiver::receive(UDPSession *session, int sock, UDPSender *sender)
+void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
 {
   char buffer[RECVMESSAGE_MAXLEN] = {0};
   struct msghdr msg = {0}; // GCC doesn't like this, C-style

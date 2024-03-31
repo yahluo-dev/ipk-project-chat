@@ -1,16 +1,14 @@
 #ifndef UDP_RECEIVER_H
 #define UDP_RECEIVER_H
 
-#include "session.h"
+#include "udp_sender.h"
 
-class Sender; // TODO: Remove this, circ dep
-class UDPSession;
-class UDPSender;
+class Session;
 
 class UDPReceiver
 {
 public:
-  static void receive(UDPSession *session, int sock, UDPSender *sender);
+  static void receive(Session *session, int sock, UDPSender *sender);
 };
 
 #endif // UDP_RECEIVER_H

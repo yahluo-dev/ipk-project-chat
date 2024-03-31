@@ -5,7 +5,8 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include "session.h"
+#include "tcp_session.h"
+#include "udp_session.h"
 
 /**
  * Class for communicating with the user via a REPL and interpreting commands.

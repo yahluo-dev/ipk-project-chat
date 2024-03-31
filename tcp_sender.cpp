@@ -1,4 +1,5 @@
 #include "tcp_sender.h"
+#include <sys/socket.h>
 
 TCPSender::TCPSender(int _sock, Session *_session)
 {
