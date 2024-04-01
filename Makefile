@@ -1,23 +1,24 @@
+CXXFLAGS += -std=c++20
 debug_flags=-Wall -Wenum-compare -Wenum-conversion -Wpedantic -ggdb -O0
+EXE=ipk24-chat-client
+TESTEXE=ipk24-chat-tests
 
-all: debug
+all: release
 
 unit-test: CXXFLAGS += $(debug_flags)
-unit-test: ipk24-chat-tests.out
-	./ipk24-chat-tests.out
+unit-test: $(TESTEXE)
+	./$(TESTEXE)
 
 test: test/system/test_connection.py
-	./test/system/test_connection.py ./ipk24-chat.out
+	./test/system/test_connection.py ./$(EXE)
 
-gdb: all
-	gdb ipk24-chat.out
-
-CXXFLAGS += -std=c++20
 
 debug: CXXFLAGS += $(debug_flags)
-debug: ipk24-chat.out
+debug: $(EXE)
 
-ipk24-chat.out: main.o client.o session.o exception.o udp_message_factory.o message.o\
+release: $(EXE)
+
+$(EXE): main.o client.o session.o exception.o udp_message_factory.o message.o\
 								udp_receiver.o udp_sender.o tcp_sender.o tcp_receiver.o tcp_message_factory.o\
 								tcp_session.o udp_session.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
@@ -43,7 +44,7 @@ message.o: message.cpp
 udp_message_factory.o: udp_message_factory.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
-ipk24-chat-tests.out: test/test_main.o test/udp_message_serialize_tests.o test/tcp_message_factory_tests.o\
+$(TESTEXE): test/test_main.o test/udp_message_serialize_tests.o test/tcp_message_factory_tests.o\
 											udp_message_factory.o message.o test/udp_message_factory_tests.o tcp_message_factory.o
 	$(CXX) $(CXXFLAGS) -lgtest $^ -o $@
 
@@ -81,6 +82,6 @@ tcp_message_factory.o: tcp_message_factory.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
 clean:
-	$(RM) *.o *.out test/*.o
+	$(RM) *.o $(EXE) test/*.o
 
 .PHONY: test clean
