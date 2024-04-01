@@ -4,6 +4,7 @@ EXE=ipk24-chat-client
 TESTEXE=ipk24-chat-tests
 
 all: release
+zip: xvasil10.zip
 
 unit-test: CXXFLAGS += $(debug_flags)
 unit-test: $(TESTEXE)
@@ -80,6 +81,9 @@ tcp_sender.o: tcp_sender.cpp
 
 tcp_message_factory.o: tcp_message_factory.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
+
+xvasil10.zip:
+	7za a $@ *.cpp *.h test *.md LICENSE Makefile
 
 clean:
 	$(RM) *.o $(EXE) test/*.o
