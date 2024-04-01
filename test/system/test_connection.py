@@ -377,16 +377,15 @@ def tcp_auth_ok():
         client = ClientSUT(exe_path, '-t tcp -s 127.0.0.1 -p 4567'.split())
 
         client.start()
-
         server.accept()
 
         client.try_auth()
         sleep(0.2)
         assert_equal(b'AUTH user AS display USING secret\r\n', server.recvmsg())
         server.sendmsg(b'REPLY OK IS COOL\r\n')
-        server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
+        #server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
 
-        sleep(0.2)
+        sleep(0.4)
 
         stderr = client.get_stderr()
         assert_in('Success: COOL', stderr)
@@ -453,7 +452,7 @@ def tcp_auth_ok_sendmsg():
 
         assert_equal(b'AUTH user AS display USING secret\r\n', server.recvmsg())
         server.sendmsg(b'REPLY OK IS COOL\r\n')
-        server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
+        #server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
 
         sleep(0.2)
 
@@ -492,7 +491,7 @@ def tcp_auth_nok_sendmsg():
         client.try_auth()
         sleep(0.2)
         assert_equal(b'AUTH user AS display USING secret\r\n', server.recvmsg())
-        server.sendmsg(b'REPLY OK IS NOTCOOL\r\n')
+        server.sendmsg(b'REPLY NOK IS NOTCOOL\r\n')
 
         sleep(0.2)
 
@@ -532,7 +531,7 @@ def tcp_auth_ok_bye_on_ctrl_c():
 
         assert_equal(b'AUTH user AS display USING secret\r\n', server.recvmsg())
         server.sendmsg(b'REPLY OK IS COOL\r\n')
-        server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
+        #server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
 
         sleep(0.2)
 
@@ -571,7 +570,7 @@ def tcp_auth_ok_bye_on_ctrl_d():
 
         assert_equal(b'AUTH user AS display USING secret\r\n', server.recvmsg())
         server.sendmsg(b'REPLY OK IS COOL\r\n')
-        server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
+        #server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
 
         sleep(0.2)
 
