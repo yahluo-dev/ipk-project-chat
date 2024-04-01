@@ -325,7 +325,7 @@ def udp_auth_ok_sendmsg():
 
     sleep(0.3)
 
-    try: # FIXME
+    try:
         client.terminate()
     except TimeoutError:
         print("Client termination timeout")
@@ -383,7 +383,7 @@ def tcp_auth_ok():
         sleep(0.2)
         assert_equal(b'AUTH user AS display USING secret\r\n', server.recvmsg())
         server.sendmsg(b'REPLY OK IS COOL\r\n')
-        #server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
+        server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
 
         sleep(0.4)
 
@@ -452,7 +452,7 @@ def tcp_auth_ok_sendmsg():
 
         assert_equal(b'AUTH user AS display USING secret\r\n', server.recvmsg())
         server.sendmsg(b'REPLY OK IS COOL\r\n')
-        #server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
+        server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
 
         sleep(0.2)
 
@@ -531,7 +531,7 @@ def tcp_auth_ok_bye_on_ctrl_c():
 
         assert_equal(b'AUTH user AS display USING secret\r\n', server.recvmsg())
         server.sendmsg(b'REPLY OK IS COOL\r\n')
-        #server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
+        server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
 
         sleep(0.2)
 
@@ -570,7 +570,7 @@ def tcp_auth_ok_bye_on_ctrl_d():
 
         assert_equal(b'AUTH user AS display USING secret\r\n', server.recvmsg())
         server.sendmsg(b'REPLY OK IS COOL\r\n')
-        #server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
+        server.sendmsg(b'MSG FROM Server IS display joined general.\r\n')
 
         sleep(0.2)
 
@@ -600,10 +600,9 @@ def test_main():
     global exe_path
     exe_path = sys.argv[1]
 
-    general_tests = False
-    udp_tests = False
+    general_tests = True
+    udp_tests = True
     tcp_tests = True
-    general_tests = False
 
     if (general_tests == True):
         no_args()
