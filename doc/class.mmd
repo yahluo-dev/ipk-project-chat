@@ -1,50 +1,71 @@
 %%{init: { "class": { "height": 300, "width": 300 } } }%%
 classDiagram
-
   class Client {
+    -bool interrupted
+    -void print_prompt()
     +repl()
-  }
-  
-  class UDPClient {
-
+    +ctrlc_handler(s: int)
   }
 
   class Session {
     -string username
     -string displayname
+    -string hostname
     -int socket
-    -sockaddr_in server
+    -uint16_t message_id
+    -session_state_t state
+    -vector<Message *> inbox
+
     +auth(uname: string,dispname: string,secret: string)
-    +sendtext(text: string)
+    +send_msg(contents: string)
+    +notify_incoming(message: Message *)
   }
 
-  class TCPSession {
-  %%TODO
+  class Sender {
+    -sender_state_t state
+    +send_msg(m: MessageWithId *)
   }
 
-  class UDPSession {
-  %%TODO
+  class TCPSender {
+    +void send_msg(MessageWithId *msg);
   }
 
-  class Server {
-    +get_msg()
-    +send_msg(m: Message)
+  class UDPSender {
+    -int max_retr
+    -vector<ConfirmMsg> conf_inbox
+    MessageWithId *last_sent
+    int timeout;
+    addrinfo server_addrinfo
+
+    +confirm(uint16_t ref_message_id)
+    +notify_confirm(msg: Message)
+    +send_msg(msg: MessageWithId *)
+    +update_addrinfo(hostname: string, port: string)
   }
 
-  class TCPServer {
-  %%TODO
+  
+  class Receiver {
+    +receive()
   }
 
-  class UDPServer {
-  %%TODO
+  class TCPReceiver {
+    receive(session: Session *, sock: int)
   }
 
-  class AbstractFactory {
-    +build()
+  class UDPReceiver {
+    receive(session: Session *, sock: int, UDPSender *sender)
   }
 
   class MessageFactory {
-    %% TODO
+    -vector<string> parse_null_terminated_data(raw_data: std::string)
+    +Message *create(m: string)
+  }
+
+  class TCPMessageFactory {
+    +Message *create(m: string)
+  }
+  class UDPMessageFactory {
+    +Message *create(m: string)
   }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -53,14 +74,16 @@ classDiagram
 
   class Message {
     -int code
-    +msg_type_t get_type()
+    +string make_tcp()
+    +string serialize()
   }
 
   class AuthMessage {
-    -uint16_t message_id
     -string username
     -string displayname
     -string secret
+    +string make_tcp()
+    +string serialize()
   }
 
   class ConfirmMessage {
@@ -68,54 +91,95 @@ classDiagram
   }
 
   class ReplyMessage {
-    -uint16_t message_id
     -uint8_t result
     -uint16_t ref_message_id
     -string message_contents
   }
 
   class JoinMessage {
-    -uint16_t message_id
     -string channel_id
     -string displayname
+    +string serialize()
+    +string make_tcp()
   }
 
   class MsgMessage {
-    -uint16_t message_id
     -string displayname
     -string message_contents
+    +string serialize()
+    +string make_tcp()
   }
 
-  class ErrMessage { %% FIXME: Same as Msg?
-    -uint16_t message_id
+  class ErrMessage {
     -string displayname
     -string message_contents
+    +string serialize()
+    +string make_tcp()
   }
 
   class ByeMessage {
+    +string serialize()
+    +string make_tcp()
+  }
+
+  class MessageWithId {
     -uint16_t message_id
+  }
+  
+  class UnknownMessage {
+  }
+
+  class UDPSession {
+    -addrinfo *server_addrinfo
+    -int timeout
+    -wait_for_reply()
+    -process_reply(ReplyMessage *reply)
+  }
+
+  class TCPSession {
+    -addrinfo *server_addrinfo
+    -wait_for_reply()
+    -process_reply()
   }
 
   <<Abstract>> Session
   Session <|-- TCPSession
   Session <|-- UDPSession
 
-  <<Abstract>> Server
-  Server <|-- TCPServer
-  Server <|-- UDPServer
+
+  <<Abstract>> Sender
+  Sender <|-- TCPSender
+  Sender <|-- UDPSender
+
+  <<Abstract>> Receiver
+  Receiver <|-- TCPReceiver
+  Receiver <|-- UDPReceiver
+
+  Session -- Receiver : << uses >>
+  Session -- Sender : << uses >>
+  Client -- Session : << instantiates >>
+  Receiver -- MessageFactory : << uses >>
+  MessageFactory --  Message : << instantiates >>
+  UDPSender -- UDPReceiver : << notifies >>
 
   <<Abstract>> Message
-  Message <|-- AuthMessage
   Message <|-- ConfirmMessage
-  Message <|-- ReplyMessage
-  Message <|-- JoinMessage
-  Message <|-- MsgMessage
-  Message <|-- ErrMessage
-  Message <|-- ByeMessage
+  Message <|-- MessageWithId
+  Message <|-- UnknownMessage
 
-  <<Abstract>> AbstractFactory
-  AbstractFactory <|-- MessageFactory
+  <<Abstract>> MessageWithId
+  MessageWithId <|-- ReplyMessage
+  MessageWithId <|-- AuthMessage
+  MessageWithId <|-- JoinMessage
+  MessageWithId <|-- MsgMessage
+  MessageWithId <|-- ErrMessage
+  MessageWithId <|-- ByeMessage
+
+  <<Abstract>> MessageFactory
+  MessageFactory <|-- UDPMessageFactory
+  MessageFactory <|-- TCPMessageFactory
 
   <<Abstract>> Client
-
   Client <|-- UDPClient
+  Client <|-- TCPClient
+
