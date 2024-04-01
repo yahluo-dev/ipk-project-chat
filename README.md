@@ -40,8 +40,8 @@ The system tests cover some of the most common use cases of the program, running
 
 The program is written in the C++ language and is structured into source files and headers. Following is the list of all files of the program:
 
-- *abstract_factory.cpp, abstract_factory.h* - Abstract message factory class for decoding messages.
-- *message_factory.cpp, message_factory.h* - TCP message factory class for decoding TCP messages.
+- *message_factory.cpp, message_factory.h* - Abstract message factory class for decoding messages.
+- *tcp_message_factory.cpp, tcp_message_factory.h* - TCP message factory class for decoding TCP messages.
 - *udp_message_factory.cpp, udp_message_factory.h* - UDP message factory class for decoding UDP messages.
 - *client.cpp, client.h* - UDP message factory class for decoding UDP messages.
 - *exception.cpp, exception.h* - Custom exception classes used by the application.
@@ -61,9 +61,10 @@ The program is written in the C++ language and is structured into source files a
 
 The **tests/** directory contains the following files:
 
-- *message_factory_tests.cpp* - Tests for the UDP message factory decoding incoming UDP messages.
-- *message_serialize_tests.cpp* - UDP message serialize() method tests
+- *udp_message_factory_tests.cpp* - Tests for the UDP message factory decoding incoming UDP messages.
+- *udp_message_serialize_tests.cpp* - UDP message serialize() method tests
 - *tcp_message_factory_tests.cpp* - Tests for the TCP message factory
+- *tcp_message_make_tcp_tests.cpp* - Tests for the make_tcp method of messages
 
 
 ### Class diagram
