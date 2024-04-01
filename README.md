@@ -39,51 +39,31 @@ The system tests cover some of the most common use cases of the program, running
 ## Structure
 
 The program is written in the C++ language and is structured into source files and headers. Following is the list of all files of the program:
-```
-.
-├── abstract_factory.h
-├── CHANGELOG.md
-├── client.cpp
-├── client.h
-├── doc
-│   ├── class.mmd
-│   └── class.mmd.png
-├── exception.cpp
-├── exception.h
-├── LICENSE
-├── main.cpp
-├── main.h
-├── Makefile
-├── message.cpp
-├── message_factory.cpp
-├── message_factory.h
-├── message.h
-├── README.md
-├── sender.h
-├── session.cpp
-├── session.h
-├── tcp_message_factory.cpp
-├── tcp_message_factory.h
-├── tcp_receiver.cpp
-├── tcp_receiver.h
-├── tcp_sender.cpp
-├── tcp_sender.h
-├── tcp_session.cpp
-├── tcp_session.h
-├── test
-│   ├── message_factory_tests.cpp
-│   ├── message_serialize_tests.cpp
-│   ├── python
-│   │   └── test_connection.py
-│   ├── test_main.cpp
-│   └── test_main.o
-├── udp_receiver.cpp
-├── udp_receiver.h
-├── udp_sender.cpp
-├── udp_sender.h
-├── udp_session.cpp
-└── udp_session.h
-```
+
+- *abstract_factory.cpp, abstract_factory.h* - Abstract message factory class for decoding messages.
+- *message_factory.cpp, message_factory.h* - TCP message factory class for decoding TCP messages.
+- *udp_message_factory.cpp, udp_message_factory.h* - UDP message factory class for decoding UDP messages.
+- *client.cpp, client.h* - UDP message factory class for decoding UDP messages.
+- *exception.cpp, exception.h* - Custom exception classes used by the application.
+- *main.cpp, main.h* - Contains the main function handling CLI arguments and creating a client.
+- *message.cpp, message.h* - Implements various message classes.
+- *session.cpp, session.h* - Session abstract class, interface between the user frontend, sender and the receiver.
+- *tcp_session.cpp, tcp_session.h* - Concrete TCP session class implementation, does not have message id validation, unlike the UDP counterpart.
+- *udp_session.cpp, udp_session.h* - Concrete UDP session class implementation.
+- *sender.h* - Abstract sender class for sending messages over TCP and UDP.
+- *tcp_sender.cpp, tcp_sender.h* - Concrete TCP sender class for sending messages over TCP.
+- *udp_sender.cpp, udp_sender.h* - Concrete UDP sender class for sending messages over UDP.
+- *.cpp, udp_sender.h* - Concrete UDP sender class for sending messages over UDP.
+- *tcp_receiver.cpp, tcp_reciever.h* - Concrete TCP receiver class for receiving and decoding TCP messages.
+- *udp_receiver.cpp, udp_reciever.h* - Concrete UDP receiver class for UDP messages.
+
+### Tests
+
+The **tests/** directory contains the following files:
+
+- *message_factory_tests.cpp* - Tests for the UDP message factory decoding incoming UDP messages.
+- *message_serialize_tests.cpp* - UDP message serialize() method tests
+- *tcp_message_factory_tests.cpp* - Tests for the TCP message factory
 
 
 ### Class diagram
