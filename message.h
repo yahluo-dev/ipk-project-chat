@@ -116,7 +116,7 @@ class ByeMessage : public MessageWithId
     std::string make_tcp() override;
 };
 
-class UnknownMessage : public Message
+class UnknownMessage : public MessageWithId
 {
   public:
     explicit UnknownMessage(uint8_t code);

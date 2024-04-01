@@ -65,7 +65,7 @@ std::string AuthMessage::make_tcp()
   tcp_message += "AUTH";
   tcp_message += " ";
   tcp_message += username;
-  tcp_message += " as ";
+  tcp_message += " AS ";
   tcp_message += display_name;
   tcp_message += " USING ";
   tcp_message += secret;

@@ -89,9 +89,21 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  if (proto == UDP) session = new UDPSession(server_hostname, port_number, udp_max_retr, udp_timeout);
-  else if (proto == TCP) session = new TCPSession(server_hostname, port_number);
-  else std::cerr << "PROTOCOL must be supplied!" << std::endl;
+  try
+  {
+    if (proto == UDP) session = new UDPSession(server_hostname, port_number, udp_max_retr, udp_timeout);
+    else if (proto == TCP) session = new TCPSession(server_hostname, port_number);
+    else
+    {
+      std::cerr << "Either UDP or TCP must be supplied as the protocol." << std::endl;
+      exit(1);
+    }
+  }
+  catch (ConnectionFailed &e)
+  {
+    std::cout << "Could not establish connection." << std::endl;
+    return 1;
+  }
   client = new Client(session);
 
   try
@@ -101,5 +113,6 @@ int main(int argc, char *argv[])
   catch (ConnectionFailed &e)
   {
     std::cout << "Fatal connection error." << std::endl;
+    return 1;
   }
 }

@@ -9,6 +9,10 @@ std::regex bye_regex("BYE\r\n", std::regex_constants::ECMAScript);
 Message *TCPMessageFactory::create(const std::string &message)
 {
   std::smatch matches;
+  if (!std::regex_match(message, std::regex("[^\r\n]\r\n")))
+  {
+    return new UnknownMessage(CODE_UNKNOWN);
+  }
 
   if (std::regex_match(message, matches, msg_regex))
   {
@@ -40,6 +44,7 @@ Message *TCPMessageFactory::create(const std::string &message)
   }
   else
   {
-    return new UnknownMessage(-100);
+    auto parsed_message = new UnknownMessage(CODE_UNKNOWN);
+    return parsed_message;
   }
 }

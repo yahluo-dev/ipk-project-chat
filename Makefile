@@ -14,7 +14,9 @@ CXXFLAGS += -std=c++20
 debug: CXXFLAGS += $(debug_flags)
 debug: ipk24-chat.out
 
-ipk24-chat.out: main.o client.o session.o exception.o message_factory.o message.o udp_receiver.o udp_sender.o tcp_sender.o tcp_receiver.o tcp_message_factory.o
+ipk24-chat.out: main.o client.o session.o exception.o message_factory.o message.o\
+								udp_receiver.o udp_sender.o tcp_sender.o tcp_receiver.o tcp_message_factory.o\
+								tcp_session.o udp_session.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 main.o: main.cpp
@@ -48,6 +50,12 @@ test/message_serialize_tests.o: test/message_serialize_tests.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
 test/message_factory_tests.o: test/message_factory_tests.cpp
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
+
+udp_session.o: udp_session.cpp
+	$(CXX) $(CXXFLAGS) -c $^ -o $@
+
+tcp_session.o: tcp_session.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
 udp_receiver.o: udp_receiver.cpp

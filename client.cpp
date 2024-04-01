@@ -65,7 +65,7 @@ void Client::repl()
     if (STATE_INTERNAL_ERROR == session->get_state() ||
         STATE_ERROR == session->get_state())
     {
-      return;
+      throw ConnectionFailed();
     }
     print_prompt();
     std::getline(std::cin, input);

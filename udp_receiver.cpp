@@ -60,10 +60,12 @@ void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
 
     if (parsed_message->code == CODE_CONFIRM)
     {
+      debug_log("Got confirm.");
       sender->notify_confirm(dynamic_cast<ConfirmMessage *>(parsed_message));
     }
     else
     {
+      debug_log("Got message.");
       sender->confirm(dynamic_cast<MessageWithId *>(parsed_message)->get_message_id());
       session->notify_incoming(parsed_message);
     }

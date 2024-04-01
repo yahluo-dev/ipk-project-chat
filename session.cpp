@@ -5,6 +5,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <arpa/inet.h>
+#include <csignal>
 #include "udp_sender.h"
 #include "udp_receiver.h"
 #include "tcp_receiver.h"
@@ -42,10 +43,7 @@ void Session::notify_incoming(Message *message)
   else if (message->code == CODE_UNKNOWN)
   {
     state = STATE_ERROR;
-    sender->send_msg(new ErrMessage(message_id++,
-                                    display_name, "Got message with invalid code."));
-    sender->send_msg(new ByeMessage(message_id++));
-    std::cerr << "ERR: Got message with invalid code from server." << std::endl;
+    std::cerr << "ERR: Couldn't decode received message!" << std::endl;
   }
   inbox.push_back(message);
   inbox_cv.notify_one();
@@ -79,6 +77,10 @@ void Session::sendmsg(const std::string &_contents)
 
 void Session::bye()
 {
+  if (state == STATE_START)
+  {
+    return;
+  }
   auto *bye_message = new ByeMessage(message_id++);
   sender->send_msg(bye_message);
 }
@@ -139,7 +141,7 @@ void Session::auth(const std::string &_username, const std::string &_secret,
   {
     sender->send_msg(new ErrMessage(message_id++,
                                     display_name, "REPLY was expected."));
-    throw UnexpectedMessage();
+    sender->send_msg(new ByeMessage(message_id++));
     return;
   }
 
