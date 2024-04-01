@@ -5,11 +5,11 @@
 
 class TCPSession : public Session
 {
-public:
+private:
   void wait_for_reply() override;
-  TCPSession(const std::string &hostname, const std::string& port);
-
   void process_reply(ReplyMessage *reply) override;
+public:
+  TCPSession(const std::string &hostname, const std::string& port);
 };
 
 #endif // TCP_SESSION_H
