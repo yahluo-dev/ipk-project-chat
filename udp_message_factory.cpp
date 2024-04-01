@@ -1,4 +1,4 @@
-#include "message_factory.h"
+#include "udp_message_factory.h"
 #include <vector>
 #include <stdexcept>
 #include <iostream>
@@ -10,7 +10,7 @@
  * Create a new Message object from a generic struct message_t.
  */
 
-std::vector<std::string> MessageFactory::parse_null_terminated_data(char *raw_data, int n_fields)
+std::vector<std::string> UDPMessageFactory::parse_null_terminated_data(char *raw_data, int n_fields)
 {
   // FIXME: Might go beyond the packet end! Use std::string?
 
@@ -26,10 +26,10 @@ std::vector<std::string> MessageFactory::parse_null_terminated_data(char *raw_da
   return vec;
 }
 
-Message *MessageFactory::create(std::string message)
+Message *UDPMessageFactory::create(const std::string &message)
 {
   uint8_t code;
-  char *generic_message = message.data();
+  char *generic_message = (char *)message.data();
   // size_t message_size = message.size();
 
   // Packet code

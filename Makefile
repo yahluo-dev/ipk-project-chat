@@ -17,7 +17,7 @@ CXXFLAGS += -std=c++20
 debug: CXXFLAGS += $(debug_flags)
 debug: ipk24-chat.out
 
-ipk24-chat.out: main.o client.o session.o exception.o message_factory.o message.o\
+ipk24-chat.out: main.o client.o session.o exception.o udp_message_factory.o message.o\
 								udp_receiver.o udp_sender.o tcp_sender.o tcp_receiver.o tcp_message_factory.o\
 								tcp_session.o udp_session.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
@@ -40,20 +40,20 @@ exception.o: exception.cpp
 message.o: message.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
-message_factory.o: message_factory.cpp
+udp_message_factory.o: udp_message_factory.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
-ipk24-chat-tests.out: test/test_main.o test/message_serialize_tests.o test/tcp_message_factory_tests.o\
-											message_factory.o message.o test/message_factory_tests.o tcp_message_factory.o
+ipk24-chat-tests.out: test/test_main.o test/udp_message_serialize_tests.o test/tcp_message_factory_tests.o\
+											udp_message_factory.o message.o test/udp_message_factory_tests.o tcp_message_factory.o
 	$(CXX) $(CXXFLAGS) -lgtest $^ -o $@
 
 test/test_main.o: test/test_main.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
-test/message_serialize_tests.o: test/message_serialize_tests.cpp
+test/udp_message_serialize_tests.o: test/udp_message_serialize_tests.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
-test/message_factory_tests.o: test/message_factory_tests.cpp
+test/udp_message_factory_tests.o: test/udp_message_factory_tests.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
 test/tcp_message_factory_tests.o: test/tcp_message_factory_tests.cpp

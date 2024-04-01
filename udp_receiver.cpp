@@ -1,7 +1,7 @@
 #include "udp_receiver.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "message_factory.h"
+#include "udp_message_factory.h"
 #include "exception.h"
 #include <cerrno>
 #include <cstring>
@@ -53,7 +53,7 @@ void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
 
     std::string binary_message = std::string(buffer, got_bytes);
 
-    MessageFactory factory = MessageFactory();
+    UDPMessageFactory factory = UDPMessageFactory();
     Message *parsed_message = factory.create(binary_message);
 
     if (parsed_message->get_code() == CODE_CONFIRM)
