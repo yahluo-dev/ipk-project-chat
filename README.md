@@ -1,6 +1,92 @@
 # IPK-Project-1
 
-## Class diagram
+## Introduction
+
+The client for **IPK-Chat** connects to the server via the specified protocol and allows the user to authenticate, send and receive messages and to join channels.
+
+## Usage
+
+### Command line arguments
+
+The two required arguments are HOSTNAME and PROTOCOL. The user can also specify the port (**-p**, default is 4567), UDP confirmation timeout in milliseconds (**-d**, default is 250), and the maximum number of UDP retransmissions (**-r**, default is 3). 
+
+UDP-related options will be ignored when -t tcp is specified. **-h** shows a help message and exits.
+
+### Commands
+
+Commands are identified by the "/" in the beginning. The following commands are available:
+
+- **/auth** *{username}* *{secret}* *{display_name}* - Attempt to authenticate at the remote server. The value in the DISPLAY_NAME option will be shown to all the other users when a user sends a message to a channel. If the authentication is successful, there will be a *Success: {message}* message and the user will be allowed to send messages to the channel. Otherwise, a *Failure: {message}* will appear.
+- **/join** *{channel_id}* - Join the channel identified by CHANNEL_ID at the remote server.
+- **/rename** *{display_name}* - Change the display name shown to other users.
+- **/help** - Show the help message.
+
+Text not preceeded by a "/" is interpreted as a MESSAGE to the current channel.
+
+*{username}* can only contain alphanumeric characters and "-" characters, must be of length between 1 and 20 characters.
+*{secret}* can only contain alphanumeric characters and "-" characters, must be of length between 1 and 128 characters.
+*{display_name}* can only contain printable characters (ascii range "!" to "~") and must be of length between 1 and 20 characters.
+*{message}* can only contain printable characters (ascii range "!" to "~") and spaces and must be of length between 1 and 1400 characters.
+
+## Testing
+
+There are unit tests as well as system tests are available in the *tests/* subdirectory. The command **make test** will run the system tests, and **make unit-test** will run the unit tests.
+
+The unit tests focus on parts responsible for serializing and deserializing messages, as they are they are the sections that give semantics to accepted binary and text messages and so, are core of the protocol implementation.
+
+The system tests cover some of the most common use cases of the program, running it in UDP and in TCP mode, authenticating, sending messages, renaming and joining channels. They also check that the program gracefully closes the connection and exits when the user interrupts it or when the standard input is closed.
+
+## Structure
+
+The program is written in the C++ language and is structured into source files and headers. Following is the list of all files of the program:
+```
+.
+├── abstract_factory.h
+├── CHANGELOG.md
+├── client.cpp
+├── client.h
+├── doc
+│   ├── class.mmd
+│   └── class.mmd.png
+├── exception.cpp
+├── exception.h
+├── LICENSE
+├── main.cpp
+├── main.h
+├── Makefile
+├── message.cpp
+├── message_factory.cpp
+├── message_factory.h
+├── message.h
+├── README.md
+├── sender.h
+├── session.cpp
+├── session.h
+├── tcp_message_factory.cpp
+├── tcp_message_factory.h
+├── tcp_receiver.cpp
+├── tcp_receiver.h
+├── tcp_sender.cpp
+├── tcp_sender.h
+├── tcp_session.cpp
+├── tcp_session.h
+├── test
+│   ├── message_factory_tests.cpp
+│   ├── message_serialize_tests.cpp
+│   ├── python
+│   │   └── test_connection.py
+│   ├── test_main.cpp
+│   └── test_main.o
+├── udp_receiver.cpp
+├── udp_receiver.h
+├── udp_sender.cpp
+├── udp_sender.h
+├── udp_session.cpp
+└── udp_session.h
+```
+
+
+### Class diagram
 
 ![alt text](./doc/class.mmd.png)
 *UML Class diagram describing the design of the client*
