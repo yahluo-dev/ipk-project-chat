@@ -6,9 +6,12 @@
 
 #define RECVMESSAGE_MAXLEN 2048
 
+std::string TCPReceiver::received_data;
+
 void TCPReceiver::receive(Session *session, int sock)
 {
   ssize_t got_bytes;
+  std::vector<std::string> messages;
 
   while(true)
   {
@@ -22,6 +25,16 @@ void TCPReceiver::receive(Session *session, int sock)
         fflush(stdout);
         throw ConnectionFailed();
       }
+      if (got_bytes == 0) break;
+
+      received_data.append(buffer, got_bytes);
+      size_t pos;
+      while ((pos = received_data.find("\r\n")) != std::string::npos)
+      {
+        std::string message = received_data.substr(0, pos+2);
+        received_data.erase(0, pos+2);
+        messages.push_back(message);
+      }
     }
     catch (...)
     {
@@ -29,9 +42,11 @@ void TCPReceiver::receive(Session *session, int sock)
       return;
     }
 
-    std::string raw_message = std::string(buffer, got_bytes);
-    TCPMessageFactory factory = TCPMessageFactory();
-    Message *parsed_message = factory.create(raw_message);
-    session->notify_incoming(parsed_message);
+    for (std::string &raw_message : messages)
+    {
+      TCPMessageFactory factory = TCPMessageFactory();
+      Message *parsed_message = factory.create(raw_message);
+      session->notify_incoming(parsed_message);
+    }
   }
 }
