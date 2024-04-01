@@ -33,3 +33,5 @@
 *.app
 
 doc/class.mmd.png
+
+.idea
