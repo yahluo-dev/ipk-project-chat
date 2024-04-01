@@ -15,30 +15,6 @@ public:
   ConnectionFailed() : std::runtime_error("Server did not respond!") {};
 };
 
-class NotAuthenticated : public std::runtime_error
-{
-public:
-  NotAuthenticated() : std::runtime_error("Not authenticated.") {};
-};
-
-class NotInChannel : public std::runtime_error
-{
-public:
-  NotInChannel() : std::runtime_error("Not in channel.") {};
-};
-
-class ReplEof : public std::runtime_error
-{
-public:
-  ReplEof() : std::runtime_error("EOF") {};
-};
-
-class UnexpectedMessage : public std::runtime_error
-{
-public:
-  UnexpectedMessage() : std::runtime_error("Got unexpected message from server") {};
-};
-
 class BadConfirm : public std::runtime_error
 {
 public:

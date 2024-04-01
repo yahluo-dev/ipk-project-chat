@@ -34,7 +34,7 @@ UDPSession::UDPSession(const std::string &_hostname, const std::string& port, un
 
 void UDPSession::process_reply(ReplyMessage *reply)
 {
-  if (reply->ref_message_id != message_id-1) // Does it match the PREVIOUS message id?
+  if (reply->get_ref_message_id() != message_id-1) // Does it match the PREVIOUS message id?
   {
     sender->send_msg(new ErrMessage(message_id++,
                                     display_name, "Reply contains wrong ref_message_id!"));
@@ -43,13 +43,13 @@ void UDPSession::process_reply(ReplyMessage *reply)
     // bye from cient?
     return;
   }
-  else if (reply->result == 0)
+  else if (reply->get_result() == 0)
   {
-    std::cerr << "Failure: " << reply->message_contents << std::endl;
+    std::cerr << "Failure: " << reply->get_contents() << std::endl;
     state = STATE_START;
     return;
   }
-  std::cerr << "Success: " << reply->message_contents << std::endl;
+  std::cerr << "Success: " << reply->get_contents() << std::endl;
   state = STATE_OPEN;
 }
 

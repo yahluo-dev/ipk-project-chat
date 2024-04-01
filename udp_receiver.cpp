@@ -1,7 +1,6 @@
 #include "udp_receiver.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <iostream>
 #include "message_factory.h"
 #include "exception.h"
 #include <cerrno>
@@ -15,7 +14,7 @@
 void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
 {
   char buffer[RECVMESSAGE_MAXLEN] = {0};
-  struct msghdr msg = {0}; // GCC doesn't like this, C-style
+  struct msghdr msg = {0};
   struct iovec iov = {0};
   char control_buffer[CMSG_SPACE(sizeof(struct sockaddr_in))];
   ssize_t got_bytes;
@@ -46,7 +45,6 @@ void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
       session->set_receiver_ex();
       return;
     }
-    // TODO: Keep track of retransmissions from server
 
     char client_addr_str[INET_ADDRSTRLEN] = {0};
     inet_ntop(AF_INET, &client_addr.sin_addr, client_addr_str, INET_ADDRSTRLEN);
@@ -58,7 +56,7 @@ void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
     MessageFactory factory = MessageFactory();
     Message *parsed_message = factory.create(binary_message);
 
-    if (parsed_message->code == CODE_CONFIRM)
+    if (parsed_message->get_code() == CODE_CONFIRM)
     {
       debug_log("Got confirm.");
       sender->notify_confirm(dynamic_cast<ConfirmMessage *>(parsed_message));

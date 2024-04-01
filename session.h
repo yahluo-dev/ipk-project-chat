@@ -33,7 +33,6 @@ protected:
   static std::condition_variable inbox_cv;
   static std::mutex inbox_mutex;
   std::string username, secret, display_name, hostname;
-  struct addrinfo *server_addrinfo;
   Sender *sender;
   int client_socket;
   uint16_t message_id;
@@ -47,8 +46,7 @@ public:
   std::jthread receiving_thread;
 
   Session(const std::string &_hostname) : hostname(_hostname),
-      server_addrinfo(nullptr), sender(nullptr),
-      client_socket(0), message_id(0){};
+      sender(nullptr), client_socket(0), message_id(0){};
   virtual ~Session();
   virtual session_state_t get_state();
 

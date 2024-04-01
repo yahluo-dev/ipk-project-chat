@@ -20,8 +20,9 @@ enum message_code_t
 class Message
 {
   protected:
-  public:
     uint8_t code;
+  public:
+    uint8_t get_code();
     virtual std::string serialize();
     virtual std::string make_tcp();
     virtual ~Message();
@@ -30,8 +31,9 @@ class Message
 class ConfirmMessage : public Message
 {
   private:
-  public:
     uint16_t ref_message_id;
+  public:
+    uint16_t get_ref_message_id();
     explicit ConfirmMessage(uint16_t _ref_message_id);
     std::string serialize() override;
 };
@@ -50,10 +52,13 @@ class MessageWithId : public Message
 class ReplyMessage : public MessageWithId
 {
   private:
-  public:
     uint8_t result;
     uint16_t ref_message_id;
     std::string message_contents;
+  public:
+    uint8_t get_result();
+    uint16_t get_ref_message_id();
+    std::string get_contents();
     ReplyMessage(uint16_t _message_id, uint8_t _result, uint16_t _ref_message_id,
         std::string _message_contents);
 };
@@ -61,11 +66,11 @@ class ReplyMessage : public MessageWithId
 class AuthMessage : public MessageWithId
 {
   private:
-  public:
     std::string username;
     std::string secret;
     std::string display_name;
-    AuthMessage(std::string _username, 
+  public:
+    AuthMessage(std::string _username,
         std::string _secret, std::string _display_name, uint16_t _message_id);
     std::string serialize() override;
     ~AuthMessage() override;
@@ -75,9 +80,11 @@ class AuthMessage : public MessageWithId
 class JoinMessage : public MessageWithId
 {
   private:
-  public:
     std::string channel_id;
     std::string display_name;
+  public:
+    std::string get_channel_id();
+    std::string get_display_name();
     JoinMessage(uint16_t _message_id, std::string _channel_id, std::string _display_name);
     std::string serialize() override;
     std::string make_tcp() override;
@@ -86,9 +93,11 @@ class JoinMessage : public MessageWithId
 class MsgMessage : public MessageWithId
 {
   private:
-  public:
     std::string display_name;
     std::string message_contents;
+  public:
+    std::string get_contents();
+    std::string get_display_name();
     MsgMessage(uint16_t _message_id, std::string _display_name,
         std::string _message_contents);
     std::string serialize() override;
@@ -98,9 +107,11 @@ class MsgMessage : public MessageWithId
 class ErrMessage : public MessageWithId
 {
   private:
-  public:
     std::string display_name;
     std::string message_contents;
+  public:
+    std::string get_contents();
+    std::string get_display_name();
     ErrMessage(uint16_t _message_id, std::string _display_name,
         std::string _message_contents);
     std::string serialize() override;

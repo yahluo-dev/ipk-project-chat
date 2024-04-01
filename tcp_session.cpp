@@ -53,15 +53,15 @@ void TCPSession::wait_for_reply()
 
 void TCPSession::process_reply(ReplyMessage *reply)
 {
-  if (reply->result == 0)
+  if (reply->get_result() == 0)
   {
-    std::cout << "Failure: " << reply->message_contents << std::endl;
+    std::cout << "Failure: " << reply->get_contents() << std::endl;
     state = STATE_START;
     return;
   }
   else
   {
-    std::cout << "Success: " << reply->message_contents << std::endl;
+    std::cout << "Success: " << reply->get_contents() << std::endl;
     state = STATE_OPEN;
   }
 }

@@ -1,14 +1,10 @@
 #include "session.h"
 #include "exception.h"
 #include <iostream>
-#include <thread>
 #include <condition_variable>
 #include <mutex>
-#include <arpa/inet.h>
 #include <csignal>
 #include "udp_sender.h"
-#include "udp_receiver.h"
-#include "tcp_receiver.h"
 #include "tcp_sender.h"
 
 std::condition_variable Session::inbox_cv;
@@ -27,20 +23,20 @@ void Session::set_receiver_ex()
 void Session::notify_incoming(Message *message)
 {
   std::lock_guard<std::mutex> lg(inbox_mutex);
-  if (message->code == CODE_MSG)
+  if (message->get_code() == CODE_MSG)
   {
     auto msg_message = dynamic_cast<MsgMessage *>(message);
-    std::cout << std::endl << msg_message->display_name << ": " << msg_message->message_contents << std::endl;
+    std::cout << std::endl << msg_message->get_display_name() << ": " << msg_message->get_contents() << std::endl;
   }
-  else if (message->code == CODE_ERR)
+  else if (message->get_code() == CODE_ERR)
   {
     state = STATE_ERROR;
     auto *err_message = dynamic_cast<ErrMessage *>(message);
-    std::cerr << "ERR FROM " << err_message->display_name <<
-        ": " << err_message->message_contents << std::endl;
+    std::cerr << "ERR FROM " << err_message->get_display_name() <<
+        ": " << err_message->get_contents() << std::endl;
     sender->send_msg(new ByeMessage(message_id++));
   }
-  else if (message->code == CODE_UNKNOWN)
+  else if (message->get_code() == CODE_UNKNOWN)
   {
     state = STATE_ERROR;
     std::cerr << "ERR: Couldn't decode received message!" << std::endl;

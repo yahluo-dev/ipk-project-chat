@@ -15,8 +15,8 @@ private:
   std::vector<ConfirmMessage *> confirm_inbox;
   MessageWithId *last_sent;
   std::chrono::milliseconds timeout;
-public:
   struct addrinfo *server_addrinfo;
+public:
   UDPSender(int _sock, struct addrinfo *server_addrinfo, unsigned int _max_retr,
             std::chrono::milliseconds _timeout, Session *_session);
   void notify_confirm(ConfirmMessage *msg);

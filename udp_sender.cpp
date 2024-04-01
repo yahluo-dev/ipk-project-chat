@@ -40,13 +40,13 @@ void UDPSender::notify_confirm(ConfirmMessage *msg)
 
   // Are we expecting a confirmation?
   if (state == STATE_WAITING) {
-    if (msg->ref_message_id < last_sent->get_message_id()) {
+    if (msg->get_ref_message_id() < last_sent->get_message_id()) {
       // Must be a duplicate or out of order
       return;
-    } else if (msg->ref_message_id == last_sent->get_message_id()) {
+    } else if (msg->get_ref_message_id() == last_sent->get_message_id()) {
       state = STATE_IDLE;
       confirm_cv.notify_one();
-    } else if (msg->ref_message_id > last_sent->get_message_id()) {
+    } else if (msg->get_ref_message_id() > last_sent->get_message_id()) {
       state = STATE_SENDER_ERROR;
     }
   }

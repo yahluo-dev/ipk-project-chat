@@ -11,6 +11,11 @@ std::string Message::serialize()
   throw NotImplemented();
 }
 
+uint8_t Message::get_code()
+{
+  return code;
+}
+
 Message::~Message() noexcept
 {
 }
@@ -47,6 +52,10 @@ std::string ConfirmMessage::serialize()
   binary_message += std::string((char *)&net_ref_msg_id, sizeof(uint16_t));
 
   return binary_message;
+}
+
+uint16_t ConfirmMessage::get_ref_message_id() {
+  return ref_message_id;
 }
 
 AuthMessage::AuthMessage(std::string _username, 
@@ -98,6 +107,18 @@ ReplyMessage::ReplyMessage(uint16_t _message_id, uint8_t _result, uint16_t _ref_
   message_contents = _message_contents;
 }
 
+uint8_t ReplyMessage::get_result() {
+  return result;
+}
+
+uint16_t ReplyMessage::get_ref_message_id() {
+  return ref_message_id;
+}
+
+std::string ReplyMessage::get_contents() {
+  return message_contents;
+}
+
 JoinMessage::JoinMessage(uint16_t _message_id, std::string _channel_id,
     std::string _display_name)
 {
@@ -130,6 +151,14 @@ std::string JoinMessage::serialize()
   binary_message += std::string(1u, '\x00');
 
   return binary_message;
+}
+
+std::string JoinMessage::get_channel_id() {
+  return channel_id;
+}
+
+std::string JoinMessage::get_display_name() {
+  return display_name;
 }
 
 MsgMessage::MsgMessage(uint16_t _message_id, std::string _display_name,
@@ -166,6 +195,14 @@ std::string MsgMessage::serialize()
   return binary_message;
 }
 
+std::string MsgMessage::get_contents() {
+  return message_contents;
+}
+
+std::string MsgMessage::get_display_name() {
+  return display_name;
+}
+
 ErrMessage::ErrMessage(uint16_t _message_id, std::string _display_name,
     std::string _message_contents)
 {
@@ -198,6 +235,14 @@ std::string ErrMessage::make_tcp()
   tcp_message += message_contents;
   tcp_message += "\r\n";
   return tcp_message;
+}
+
+std::string ErrMessage::get_contents() {
+  return message_contents;
+}
+
+std::string ErrMessage::get_display_name() {
+  return display_name;
 }
 
 ByeMessage::ByeMessage(uint16_t _message_id)

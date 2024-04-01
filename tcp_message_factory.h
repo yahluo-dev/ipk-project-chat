@@ -2,9 +2,9 @@
 #define TCP_MESSAGE_FACTORY_H
 
 #include "message.h"
-#include "abstract_factory.h"
+#include "message_factory.h"
 
-class TCPMessageFactory : public AbstractFactory
+class TCPMessageFactory : public MessageFactory
 {
 private:
 public:
