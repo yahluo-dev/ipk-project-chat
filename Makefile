@@ -36,9 +36,6 @@ session.o: session.cpp
 exception.o: exception.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
-# server.o: server.cpp
-# 	$(CXX) $(CXXFLAGS) -c $^ -o $@
-
 message.o: message.cpp
 	$(CXX) $(CXXFLAGS) -c $^ -o $@
 
