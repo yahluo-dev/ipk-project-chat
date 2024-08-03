@@ -2,7 +2,44 @@
 
 ## Introduction
 
-The client for **IPK-Chat** connects to the server via the specified protocol and allows the user to authenticate, send and receive messages and to join channels.
+The client for **IPK-CHAT**[IPK-CHAT] connects to the server via the specified protocol and allows the user to authenticate, send and receive messages and to join channels.
+
+### Theory
+
+The **IPK-CHAT** protocol specifies the behaviour of chat server and client
+in order to allow two-way communication for exchange of user messages and metadata.
+The protocol has two variants: UDP and TCP, both of which are implemented in this
+project.
+
+#### TCP
+
+**Transmission Control Protocol** (TCP) is used as reliable host-to-host transport
+(OSI Layer 4) protocol for communication between hosts in packet-switched computer networks. 
+The communication takes form of an in-order byte-stream, which can be sent by either party
+to the other one. A variety of means is used for reliable transmission, including sequence
+numbers, which are assigned to each **segment** to ensure in-order delivery; and
+an acknowledgement mechanism - the receiver acknowledges the receipt of a segment to the
+sender.[RFC9293]
+
+Even though the protocol does provide reliable and in-order data transfer, it does not
+possess a mechanism for separating discrete blocks of data - it only provides a byte-stream
+without any separation, which makes it imperative to implement a sort of data separation
+mechanism.
+
+#### UDP
+
+**User Datagram Protocol** (UDP) is also a transport (OSI Layer 4) protocol designed for
+packet-switched computer communication, whose function, nevertheless, carries significant
+differences to such of TCP. Generally speaking, the protocol can be called simpler
+than TCP, with its absence of reliability-ensuring and order-securing mechanisms.
+Its *protocol data unit* (PDU) is called a **datagram** and it does not contain a sequence
+number to establish the datagram order. Neither the receiving party is obliged to send
+an acknowledgement upon receiving a piece of data. The protocol does, however, deliver
+data as a sequence of datagrams, rather that a homogenous byte-stream.[RFC768]
+
+The specifics of this protocol beg for an implemetation of some sort of an acknowledgement
+mechanism. The design complexity, nevertheless, is alleviated by a certain degree by the
+the presence of a data separation mechanism in the form of datagrams.
 
 ### Requirements
 
@@ -269,3 +306,11 @@ classDiagram
 
 ```
 *UML Class diagram describing the design of the client*
+
+## Bibliography
+
+[IPK-CHAT] NESFIT *IPK Project 1: Client for a chat server using IPK24-CHAT protocol* [online] April 2024. Available at: https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024
+
+[RFC9293] Eddy, W. _Transmission Control Protocol (TCP)_ [online]. August 2022. [cited 2024-08-03]. DOI: 10.17487/RFC9293. Available at: https://datatracker.ietf.org/doc/html/rfc9293
+
+[RFC768] Postel, J. _User Datagram Protocol_ [online]. March 1997. [cited 2024-08-03]. DOI: 10.17487/RFC0768. Available at: https://datatracker.ietf.org/doc/html/rfc768
