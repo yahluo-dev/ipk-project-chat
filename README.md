@@ -8,8 +8,8 @@ The client for **IPK-CHAT**[IPK-CHAT] connects to the server via the specified p
 
 The **IPK-CHAT** protocol specifies the behaviour of chat server and client
 in order to allow two-way communication for exchange of user messages and metadata.
-The protocol has two variants: UDP and TCP, both of which are implemented in this
-project.
+The chat protocol has two variants: over UDP and over TCP, both of which are implemented in
+this project.
 
 #### TCP
 
@@ -40,6 +40,21 @@ data as a sequence of datagrams, rather that a homogenous byte-stream.[RFC768]
 The specifics of this protocol beg for an implemetation of some sort of an acknowledgement
 mechanism. The design complexity, nevertheless, is alleviated by a certain degree by the
 the presence of a data separation mechanism in the form of datagrams.
+
+#### BSD Sockets
+
+**Sockets** are structures that act as communication endpoints for bidirectional data
+exchange between processes, which are used in this project to interact with the remote
+server over a network. They are identified by a file descriptor which is used to interact
+with the socket using appropriate function calls. In this regard they are similar to 
+*pipes*, with the latter being less flexible, albeit simpler.
+
+A socket can handle either a stream of data or datagrams, depending on the socket type.
+Stream sockets are usually used for TCP, while datagram sockets are used for UDP
+communication. Depending on whether a connection is established using the connect() call,
+communication can be connection-oriented or connectionless. connect() can also be called
+on a datagram socket, which merely lets the programmer supply the information about the
+counterpart to the socket in advance.
 
 ### Requirements
 
