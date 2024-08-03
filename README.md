@@ -108,17 +108,17 @@ The program is written in the C++ language and is structured into source files a
 - *message_factory.cpp, message_factory.h* - Abstract message factory class for decoding messages.
 - *tcp_message_factory.cpp, tcp_message_factory.h* - TCP message factory class for decoding TCP messages.
 - *udp_message_factory.cpp, udp_message_factory.h* - UDP message factory class for decoding UDP messages.
-- *client.cpp, client.h* - UDP message factory class for decoding UDP messages.
+- *client.cpp, client.h* - Client class used to provide user with a REPL.
 - *exception.cpp, exception.h* - Custom exception classes used by the application.
 - *main.cpp, main.h* - Contains the main function handling CLI arguments and creating a client.
 - *message.cpp, message.h* - Implements various message classes.
 - *session.cpp, session.h* - Session abstract class, interface between the user frontend, sender and the receiver.
-- *tcp_session.cpp, tcp_session.h* - Concrete TCP session class implementation, does not have message id validation, unlike the UDP counterpart.
+- *tcp_session.cpp, tcp_session.h* - Concrete TCP session class implementation. Does not have message id validation, unlike the UDP counterpart.
 - *udp_session.cpp, udp_session.h* - Concrete UDP session class implementation.
 - *sender.h* - Abstract sender class for sending messages over TCP and UDP.
 - *tcp_sender.cpp, tcp_sender.h* - Concrete TCP sender class for sending messages over TCP.
 - *udp_sender.cpp, udp_sender.h* - Concrete UDP sender class for sending messages over UDP.
-- *.cpp, udp_sender.h* - Concrete UDP sender class for sending messages over UDP.
+- *udp_sender.cpp, udp_sender.h* - Concrete UDP sender class for sending messages over UDP.
 - *tcp_receiver.cpp, tcp_reciever.h* - Concrete TCP receiver class for receiving and decoding TCP messages.
 - *udp_receiver.cpp, udp_reciever.h* - Concrete UDP receiver class for UDP messages.
 
@@ -316,8 +316,6 @@ classDiagram
   MessageFactory <|-- TCPMessageFactory
 
   <<Abstract>> Client
-  Client <|-- UDPClient
-  Client <|-- TCPClient
 
 ```
 *UML Class diagram describing the design of the client*
