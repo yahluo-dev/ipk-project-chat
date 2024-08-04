@@ -148,7 +148,6 @@ The program is written in the C++ language and is structured into source files a
 - *sender.h* - Abstract sender class for sending messages over TCP and UDP.
 - *tcp_sender.cpp, tcp_sender.h* - Concrete TCP sender class for sending messages over TCP.
 - *udp_sender.cpp, udp_sender.h* - Concrete UDP sender class for sending messages over UDP.
-- *udp_sender.cpp, udp_sender.h* - Concrete UDP sender class for sending messages over UDP.
 - *tcp_receiver.cpp, tcp_reciever.h* - Concrete TCP receiver class for receiving and decoding TCP messages.
 - *udp_receiver.cpp, udp_reciever.h* - Concrete UDP receiver class for UDP messages.
 
