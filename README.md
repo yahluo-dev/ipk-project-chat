@@ -90,8 +90,8 @@ Text not preceeded by a "/" is interpreted as a MESSAGE to the current channel.
 
 *{username}* can only contain alphanumeric characters and "-" characters, must be of length between 1 and 20 characters.
 *{secret}* can only contain alphanumeric characters and "-" characters, must be of length between 1 and 128 characters.
-*{display_name}* can only contain printable characters (ascii range "!" to "~") and must be of length between 1 and 20 characters.
-*{message}* can only contain printable characters (ascii range "!" to "~") and spaces and must be of length between 1 and 1400 characters.
+*{display_name}* can only contain printable characters (ascii range "!" to "\~") and must be of length between 1 and 20 characters.
+*{message}* can only contain printable characters (ascii range "!" to "\~") and spaces and must be of length between 1 and 1400 characters.
 
 ### Example usage
 
