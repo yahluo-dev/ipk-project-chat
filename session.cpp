@@ -26,7 +26,7 @@ void Session::notify_incoming(Message *message)
   if (message->get_code() == CODE_MSG)
   {
     auto msg_message = dynamic_cast<MsgMessage *>(message);
-    std::cout << std::endl << msg_message->get_display_name() << ": " << msg_message->get_contents();
+    std::cout << std::endl << msg_message->get_display_name() << ": " << msg_message->get_contents() << std::endl;
   }
   else if (message->get_code() == CODE_ERR)
   {
