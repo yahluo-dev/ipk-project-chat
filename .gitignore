@@ -31,6 +31,7 @@
 *.exe
 *.out
 *.app
+ipk24-chat-client
 
 doc/class.mmd.png
 
