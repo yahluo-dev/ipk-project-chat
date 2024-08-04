@@ -13,7 +13,7 @@ this project.
 
 #### TCP
 
-**Transmission Control Protocol** (TCP) is used as reliable host-to-host transport
+**Transmission Control Protocol** (TCP) is used as reliable transport
 (OSI Layer 4) protocol for communication between hosts in packet-switched computer networks. 
 The communication takes form of an in-order byte-stream, which can be sent by either party
 to the other one. A variety of means is used for reliable transmission, including sequence
@@ -21,7 +21,7 @@ numbers, which are assigned to each **segment** to ensure in-order delivery; and
 an acknowledgement mechanism - the receiver acknowledges the receipt of a segment to the
 sender.[RFC9293]
 
-Even though the protocol does provide reliable and in-order data transfer, it does not
+Even though the protocol provides reliable and in-order data transfer, it does not
 possess a mechanism for separating discrete blocks of data - it only provides a byte-stream
 without any separation, which makes it imperative to implement a sort of data separation
 mechanism.
@@ -32,13 +32,15 @@ mechanism.
 packet-switched computer communication, whose function, nevertheless, carries significant
 differences to such of TCP. Generally speaking, the protocol can be called simpler
 than TCP, with its absence of reliability-ensuring and order-securing mechanisms.
-Its *protocol data unit* (PDU) is called a **datagram** and it does not contain a sequence
-number to establish the datagram order. Neither the receiving party is obliged to send
-an acknowledgement upon receiving a piece of data. The protocol does, however, deliver
-data as a sequence of datagrams, rather that a homogenous byte-stream.[RFC768]
+Its *protocol data unit* (PDU) is called a **datagram** and it does not contain 
+a sequence number to establish the order of datagrams; 
+nor is the receiving party obliged to send an acknowledgement upon 
+receiving a piece of data. 
+The protocol does, however, deliver data as a sequence of datagrams, 
+rather than a homogenous byte-stream.[RFC768]
 
 The specifics of this protocol beg for an implemetation of some sort of an acknowledgement
-mechanism. The design complexity, nevertheless, is alleviated by a certain degree by the
+mechanism. The design complexity, nevertheless, is alleviated to a certain degree by the
 the presence of a data separation mechanism in the form of datagrams.
 
 #### BSD Sockets
@@ -91,6 +93,34 @@ Text not preceeded by a "/" is interpreted as a MESSAGE to the current channel.
 *{display_name}* can only contain printable characters (ascii range "!" to "~") and must be of length between 1 and 20 characters.
 *{message}* can only contain printable characters (ascii range "!" to "~") and spaces and must be of length between 1 and 1400 characters.
 
+### Example usage
+
+``` shell
+$> ./ipk24-chat-client -t udp -s ourchat.server -d 200
+Use /help to get help. Exit with ^D or ^C.
+IPK24-CHAT > /help
+Usage:
+        /auth USERNAME SECRET DISPLAYNAME - Authenticate using supplied credentials.
+        /join CHANNEL_ID - Join channel.
+        /rename DISPLAYNAME - Change current display name.
+        /help - Show this message.
+
+IPK24-CHAT > /auth user1 mysecret jarda
+Success: OK
+IPK24-CHAT > Hi people, is this thing working?
+IPK24-CHAT >
+honza: Sure does.
+
+IPK24-CHAT > Excellent. Heading to school now, take care!
+josh: bye!
+
+IPK24-CHAT > <^D pressed>Bye!
+$>
+```
+
+*The last "Bye!" is actually an indication of a BYE datagram sent.*
+*Communication over TCP looks the same to the user*
+
 ## Testing
 
 There are unit tests as well as system tests are available in the *tests/* subdirectory. The command **make test** will run the system tests, and **make unit-test** will run the unit tests.
@@ -130,6 +160,48 @@ The **tests/** directory contains the following files:
 - *udp_message_serialize_tests.cpp* - UDP message serialize() method tests
 - *tcp_message_factory_tests.cpp* - Tests for the TCP message factory
 - *tcp_message_make_tcp_tests.cpp* - Tests for the make_tcp method of messages
+
+#### Testing example
+
+``` shell
+$> make unit-test
+$> ./ipk24-chat-tests
+[==========] Running 10 tests from 3 test suites.
+[----------] Global test environment set-up.
+[----------] 3 tests from MessageSerializeTests
+[ RUN      ] MessageSerializeTests.SerializeConfirm
+[       OK ] MessageSerializeTests.SerializeConfirm (0 ms)
+[ RUN      ] MessageSerializeTests.SerializeAuth
+[       OK ] MessageSerializeTests.SerializeAuth (0 ms)
+[ RUN      ] MessageSerializeTests.SerializeMsg
+[       OK ] MessageSerializeTests.SerializeMsg (0 ms)
+[----------] 3 tests from MessageSerializeTests (0 ms total)
+
+[----------] 3 tests from TCPMessageFactoryTests
+[ RUN      ] TCPMessageFactoryTests.CreateReply
+[       OK ] TCPMessageFactoryTests.CreateReply (0 ms)
+[ RUN      ] TCPMessageFactoryTests.CreateMsg
+[       OK ] TCPMessageFactoryTests.CreateMsg (0 ms)
+[ RUN      ] TCPMessageFactoryTests.CreateErr
+[       OK ] TCPMessageFactoryTests.CreateErr (0 ms)
+[----------] 3 tests from TCPMessageFactoryTests (0 ms total)
+
+[----------] 4 tests from MsgFactoryTests
+[ RUN      ] MsgFactoryTests.CreateConfirm
+[       OK ] MsgFactoryTests.CreateConfirm (0 ms)
+[ RUN      ] MsgFactoryTests.CreateReply
+[       OK ] MsgFactoryTests.CreateReply (0 ms)
+[ RUN      ] MsgFactoryTests.CreateMsg
+[       OK ] MsgFactoryTests.CreateMsg (0 ms)
+[ RUN      ] MsgFactoryTests.CreateErr
+[       OK ] MsgFactoryTests.CreateErr (0 ms)
+[----------] 4 tests from MsgFactoryTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 10 tests from 3 test suites ran. (1 ms total)
+[  PASSED  ] 10 tests.
+$>
+```
 
 ### Class diagram
 
