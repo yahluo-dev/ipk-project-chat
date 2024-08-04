@@ -1,5 +1,6 @@
 CXXFLAGS += -std=c++20
 debug_flags=-Wall -Wenum-compare -Wenum-conversion -Wpedantic -ggdb -O0
+release_flags=-DNDEBUG
 EXE=ipk24-chat-client
 TESTEXE=ipk24-chat-tests
 
@@ -17,6 +18,7 @@ test: test/system/test_connection.py
 debug: CXXFLAGS += $(debug_flags)
 debug: $(EXE)
 
+release: CXXFLAGS += $(release_flags)
 release: $(EXE)
 
 $(EXE): main.o client.o session.o exception.o udp_message_factory.o message.o\

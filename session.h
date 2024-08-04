@@ -11,8 +11,13 @@
 #include <condition_variable>
 #include <mutex>
 
+#ifndef NDEBUG
 #define debug_logf(format, ...) printf("DEBUG() :: " format "\n", __VA_ARGS__)
 #define debug_log(message) printf("DEBUG() :: " message "\n")
+#else
+#define debug_logf(format, ...)
+#define debug_log(message)
+#endif
 
 #include "message.h"
 #include "sender.h"

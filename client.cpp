@@ -25,11 +25,11 @@ void Client::ctrlc_handler(int signal)
   if (interrupted)
   {
     std::cout << "Force quitting." << std::endl;
-    //session->receiving_thread.join();
     delete session;
     exit(1);
   }
   interrupted = true;
+  std::cout << "Bye!" << std::endl;
   Client::session->bye();
   exit(0);
 }
