@@ -153,12 +153,22 @@ The program is written in the C++ language and is structured into source files a
 
 ### Tests
 
-The **tests/** directory contains the following files:
+The **tests/** directory contains the following unit test files:
 
+- *test_main.cpp* - Setup of googletest framework and running of tests
 - *udp_message_factory_tests.cpp* - Tests for the UDP message factory decoding incoming UDP messages.
 - *udp_message_serialize_tests.cpp* - UDP message serialize() method tests
 - *tcp_message_factory_tests.cpp* - Tests for the TCP message factory
-- *tcp_message_make_tcp_tests.cpp* - Tests for the make_tcp method of messages
+
+There are files for each of the underlying transport-level protocols.
+For UDP, tests focus on making sure that the **message factory** processing binary
+messages correctly determines the type of message and processes its contents.
+UDP tests also make sure that the serialize() method of message objects produces
+correct binary data to be sent.
+
+For TCP, because protocol messages are in text format, there is no need for 
+serialization or deserialization, so the only thing feature that is tested is
+interpretation of messages from the server.
 
 #### Testing example
 
