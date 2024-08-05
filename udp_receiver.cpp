@@ -67,6 +67,5 @@ void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
       sender->confirm(dynamic_cast<MessageWithId *>(parsed_message)->get_message_id());
       session->notify_incoming(parsed_message);
     }
-    // Notify session
   }
 }

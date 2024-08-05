@@ -141,7 +141,7 @@ void Session::auth(const std::string &_username, const std::string &_secret,
     return;
   }
 
-  auto reply = dynamic_cast<ReplyMessage *>(inbox[0]); // May get an unexpected type?
+  auto reply = dynamic_cast<ReplyMessage *>(inbox[0]);
   inbox.pop_back();
 
   process_reply(reply);

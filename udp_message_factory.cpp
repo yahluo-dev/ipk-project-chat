@@ -4,16 +4,12 @@
 #include <iostream>
 #include <arpa/inet.h>
 
-// TODO: Fix endianness of numbers (Must be BE when transmitting)
-
 /**
  * Create a new Message object from a generic struct message_t.
  */
 
 std::vector<std::string> UDPMessageFactory::parse_null_terminated_data(char *raw_data, int n_fields)
 {
-  // FIXME: Might go beyond the packet end! Use std::string?
-
   std::vector<std::string> vec;
 
   for (int i = 0; i < n_fields; i++)
@@ -30,7 +26,6 @@ Message *UDPMessageFactory::create(const std::string &message)
 {
   uint8_t code;
   char *generic_message = (char *)message.data();
-  // size_t message_size = message.size();
 
   // Packet code
   code = *(uint8_t *)generic_message;

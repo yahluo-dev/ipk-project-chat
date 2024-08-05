@@ -34,13 +34,13 @@ UDPSession::UDPSession(const std::string &_hostname, const std::string& port, un
 
 void UDPSession::process_reply(ReplyMessage *reply)
 {
-  if (reply->get_ref_message_id() != message_id-1) // Does it match the PREVIOUS message id?
+  if (reply->get_ref_message_id() != message_id-1) // Does it match the previous message id?
   {
+    // It does not. Probably an error on the server side.
     sender->send_msg(new ErrMessage(message_id++,
                                     display_name, "Reply contains wrong ref_message_id!"));
     std::cout << "ERR: Reply contains wrong ref_message_id!" << std::endl;
     state = STATE_ERROR;
-    // bye from cient?
     return;
   }
   else if (reply->get_result() == 0)

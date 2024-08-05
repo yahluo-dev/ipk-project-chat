@@ -108,7 +108,6 @@ void UDPSender::send_msg(MessageWithId *msg)
     state = STATE_WAITING;
     // This condition is true when state == STATE_IDLE
     // (receiver already notified us of confirmation)
-    //delete last_sent;
     last_sent = msg;
     if (confirm_cv.wait_for(ul, timeout,
                                     [] { return UDPSender::state != STATE_WAITING; }))
