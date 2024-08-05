@@ -32,6 +32,7 @@
 *.out
 *.app
 ipk24-chat-client
+ipk24-chat-tests
 
 doc/class.mmd.png
 
