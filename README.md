@@ -48,7 +48,7 @@ the presence of a data separation mechanism in the form of datagrams.
 **Sockets** are structures that act as communication endpoints for bidirectional data
 exchange between processes, which are used in this project to interact with the remote
 server over a network. They are identified by a file descriptor which is used to interact
-with the socket using appropriate function calls. In this regard they are similar to 
+with the socket using appropriate function calls.[IEEE 1003.1-2024] In this regard they are similar to 
 *pipes*, with the latter being less flexible, albeit simpler.
 
 A socket can handle either a stream of data or datagrams, depending on the socket type.
@@ -57,6 +57,12 @@ communication. Depending on whether a connection is established using the connec
 communication can be connection-oriented or connectionless. connect() can also be called
 on a datagram socket, which merely lets the programmer supply the information about the
 counterpart to the socket in advance.
+
+#### IP
+
+**Internet protocol** is the protocol responsible for routing PDUs referred to as **packets** across networks. For this task, every host is identified by an IP address and metadata in the header that, besides the source and destination IP address, also includes flags for controlling features like fragmentation, fragment offset used when re-assembling the packet and other data. [RFC791]
+
+The program can be used with both IPv4 and IPv6[RFC8200] addresses, or a domain name[RFC1034] can be supplied, which will be resolved.
 
 ### Requirements
 
@@ -212,7 +218,19 @@ $> ./ipk24-chat-tests
 $>
 ```
 
-### Class diagram
+### Design
+
+#### Overview
+
+The three main parts of the program are *Receiver*, *Sender*, *Session* and *Client*. Client is responsible for the interaction with the user by providing a read-eval-print loop interpreting and responding to user command. Session is an abstract class representing the connection to the server with given credentials and managing connection establishment, authentication, and sending and receiving of messages, thus ensuring smooth cooperation of the remaining two parts of the program - Sender and Receiver. Receiver works in parallel to Sender, notifying the Session object of incoming messages. It has two subclasses: *TCPReceiver* and *UDPReceiver*, with the latter also being able to notify the *UDPSender* class when a UDP CONFIRM datagram is received.
+
+#### Messages
+
+The **Message** class internally represents a message received or to be sent. Its subclasses are individual message types, each containing fields pertinent to the given type. 
+Message objects are created by passing the received binary datagram (UDP) or the protocol message delimited by "\\r\\n" (TCP) to an instance of a corresponding subclass of the abstract factory **MessageFactory**. 
+The Message class contains a method ```make_tcp()``` for making a protocol message of the relevant type for TCP communication, and ```serialize()``` for making a protocol message for communication over UDP.
+
+#### Class diagram
 
 ```mermaid
 %%{init: { "class": { "height": 300, "width": 300 } } }%%
@@ -403,8 +421,16 @@ classDiagram
 
 ## Bibliography
 
-[IPK-CHAT] NESFIT *IPK Project 1: Client for a chat server using IPK24-CHAT protocol* [online] April 2024. Available at: https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024
+[IPK-CHAT] NESFIT *IPK Project 1: Client for a chat server using IPK24-CHAT protocol* [online] April 2024. [cited 2024-08-03] Available at: https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024
 
 [RFC9293] Eddy, W. _Transmission Control Protocol (TCP)_ [online]. August 2022. [cited 2024-08-03]. DOI: 10.17487/RFC9293. Available at: https://datatracker.ietf.org/doc/html/rfc9293
 
 [RFC768] Postel, J. _User Datagram Protocol_ [online]. March 1997. [cited 2024-08-03]. DOI: 10.17487/RFC0768. Available at: https://datatracker.ietf.org/doc/html/rfc768
+
+[RFC791] Postel, J. _Internet Protocol_ [online] September 1981. [cited 2024-08-08]. DOI: 10.17487/RFC0791. Available at: https://datatracker.ietf.org/doc/rfc791/
+
+[RFC8200] Dr. Steve E. Deering and Bob Hinden _Internet Protocol, Version 6 (IPv6) Specification_ [online] July 2017 [cited 2024-08-08] DOI: 10.17487/RFC8200. Available at: https://datatracker.ietf.org/doc/rfc8200/
+
+[RFC1034] Mockapetris, P _Domain names - concepts and facilities_ [online] November 1987 [cited 2024-08-08] DOI: 10.17487/RFC1034. Available at: https://datatracker.ietf.org/doc/rfc1034/
+
+[IEEE 1003.1-2024] IEEE Computer Society, _IEEE/Open Group Standard for Information Technology--Portable Operating System Interface (POSIX) Base Specifications, Issue 8_ 2024 [cited 2024-08-08] DOI: 10.1109/IEEESTD.2024.10555529.
