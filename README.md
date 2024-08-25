@@ -129,13 +129,13 @@ $>
 
 ## Testing
 
-There are unit tests as well as system tests are available in the *tests/* subdirectory. The command **make test** will run the system tests, and **make unit-test** will run the unit tests.
+There are unit tests as well as "smoke tests" are available in the *tests/* subdirectory. The command **make test** will run the smoke tests, and **make unit-test** will run the unit tests.
 
 The unit tests focus on parts responsible for **serializing** and **deserializing** messages, as they are they are the sections that interpret accepted binary and text messages. So, they are of high importance.
 
-The **system tests** cover some of the most common use cases of the program, running it in UDP and in TCP mode, authenticating, sending messages, renaming and joining channels. They also check that the program gracefully closes the connection and exits when the user interrupts it or when the standard input is closed.
+The **smoke tests** cover some of the most common use cases of the program, running it in UDP and in TCP mode, authenticating, sending messages, renaming and joining channels. They also check that the program gracefully closes the connection and exits when the user interrupts it or when the standard input is closed.
 
-System tests include testing that **attempts to send a message** in the OPEN state (after authentication) are successful, while those in the START state are unsuccessful and an error is shown. This is important to ensure that a user cannot send messages to the server unauthenticated, as it is not correct behaviour.
+Smoke tests include testing that **attempts to send a message** in the OPEN state (after authentication) are successful, while those in the START state are unsuccessful and an error is shown. This is important to ensure that a user cannot send messages to the server unauthenticated, as it is not correct behaviour.
 
 ## Structure
 
