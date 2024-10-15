@@ -47,10 +47,7 @@ void Session::notify_incoming(Message *message)
 
 
 Session::~Session()
-{
-  receiving_thread.join();
-  close(client_socket);
-}
+{}
 
 void Session::sendmsg(const std::string &_contents)
 {

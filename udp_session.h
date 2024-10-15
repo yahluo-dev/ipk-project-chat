@@ -15,6 +15,7 @@ private:
 public:
   UDPSession(const std::string &hostname, const std::string& port,
              unsigned int _max_retr, std::chrono::milliseconds _timeout);
+  ~UDPSession();
 };
 
 #endif // UDP_SESSION

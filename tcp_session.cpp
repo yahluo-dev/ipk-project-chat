@@ -65,3 +65,9 @@ void TCPSession::process_reply(ReplyMessage *reply)
     state = STATE_OPEN;
   }
 }
+
+TCPSession::~TCPSession()
+{
+  receiving_thread.join();
+  close(client_socket);
+}

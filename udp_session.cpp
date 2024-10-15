@@ -62,3 +62,9 @@ void UDPSession::wait_for_reply()
     throw ConnectionFailed();
   }
 }
+
+UDPSession::~UDPSession()
+{
+  receiving_thread.join();
+  close(client_socket);
+}

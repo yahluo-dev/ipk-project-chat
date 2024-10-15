@@ -11,6 +11,7 @@ private:
   void process_reply(ReplyMessage *reply) override;
 public:
   TCPSession(const std::string &hostname, const std::string& port);
+  ~TCPSession();
 };
 
 #endif // TCP_SESSION_H
