@@ -1,8 +1,8 @@
-#ifndef MESSAGE_FACTORY_H
-#define MESSAGE_FACTORY_H
+#ifndef UDP_MESSAGE_FACTORY_H
+#define UDP_MESSAGE_FACTORY_H
 
-#include "message_factory.h"
 #include "message.h"
+#include "message_factory.h"
 #include <vector>
 
 class UDPMessageFactory : public MessageFactory
@@ -13,4 +13,4 @@ class UDPMessageFactory : public MessageFactory
     Message *create(const std::string &message) override;
 };
 
-#endif // MESSAGE_FACTORY_H
+#endif // UDP_MESSAGE_FACTORY_H
