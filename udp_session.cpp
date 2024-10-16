@@ -29,7 +29,10 @@ UDPSession::UDPSession(const std::string &_hostname, const std::string& port, un
     break;
   }
   sender = std::make_unique<UDPSender>(client_socket, server_addrinfo, _max_retr, timeout, *this);
-  receiving_thread = std::jthread(UDPReceiver::receive, *this, client_socket, dynamic_cast<UDPSender&>(*sender));
+  receiving_thread = std::jthread([this]() {
+    UDPReceiver::receive(static_cast<Session&>(*this), this->client_socket, dynamic_cast<UDPSender&>(*this->sender));
+  });
+
 }
 
 void UDPSession::process_reply(ReplyMessage &reply)

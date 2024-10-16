@@ -41,7 +41,9 @@ TCPSession::TCPSession(const std::string &hostname, const std::string& port)
   }
 
   sender = std::make_unique<TCPSender>(client_socket, *this);
-  receiving_thread = std::jthread(TCPReceiver::receive, *this, client_socket);
+  receiving_thread = std::jthread([this]() {
+    TCPReceiver::receive(static_cast<Session&>(*this), this->client_socket);
+  });
 }
 
 void TCPSession::wait_for_reply()

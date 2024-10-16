@@ -23,7 +23,7 @@ public:
   Sender(Session &_session, int _sock)
     : session(_session), sock(_sock){};
   virtual void send_msg(std::unique_ptr<MessageWithId> msg);
-  virtual ~Sender();
+  virtual ~Sender(){};
 };
 
 #endif // SENDER_H
