@@ -1,13 +1,10 @@
 #include "tcp_sender.h"
 #include <sys/socket.h>
 
-TCPSender::TCPSender(int _sock, Session *_session)
-{
-  sock = _sock;
-  session = _session;
-}
+TCPSender::TCPSender(int _sock, Session &_session) : Sender(_session, _sock)
+{}
 
-void TCPSender::send_msg(MessageWithId *msg)
+void TCPSender::send_msg(std::unique_ptr<MessageWithId> msg)
 {
   std::string tcp_message = msg->make_tcp();
 

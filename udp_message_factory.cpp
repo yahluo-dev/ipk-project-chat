@@ -22,7 +22,7 @@ std::vector<std::string> UDPMessageFactory::parse_null_terminated_data(char *raw
   return vec;
 }
 
-Message *UDPMessageFactory::create(const std::string &message)
+std::unique_ptr<Message> UDPMessageFactory::create(const std::string &message)
 {
   uint8_t code;
   char *generic_message = (char *)message.data();
@@ -38,7 +38,7 @@ Message *UDPMessageFactory::create(const std::string &message)
       uint16_t ref_message_id = *(uint16_t *)generic_message;
       ref_message_id = ntohs(ref_message_id);
       generic_message += sizeof(uint16_t);
-      return new ConfirmMessage(ref_message_id);
+      return std::make_unique<ConfirmMessage>(ref_message_id);
     }
     case CODE_REPLY:
     {
@@ -53,7 +53,7 @@ Message *UDPMessageFactory::create(const std::string &message)
       auto data_fields = parse_null_terminated_data(generic_message, 1);
       std::string message_contents = data_fields[0];
 
-      return new ReplyMessage(message_id, result, ref_message_id,
+      return std::make_unique<ReplyMessage>(message_id, result, ref_message_id,
           message_contents);
     }
     case CODE_MSG:
@@ -64,7 +64,7 @@ Message *UDPMessageFactory::create(const std::string &message)
       auto data_fields = parse_null_terminated_data(generic_message, 2);
       std::string displayname = data_fields[0];
       std::string message_contents = data_fields[1];
-      return new MsgMessage(message_id, displayname, message_contents);
+      return std::make_unique<MsgMessage>(message_id, displayname, message_contents);
     }
     case CODE_ERR:
     {
@@ -75,19 +75,19 @@ Message *UDPMessageFactory::create(const std::string &message)
       auto data_fields = parse_null_terminated_data(generic_message, 2);
       std::string displayname = data_fields[0];
       std::string message_contents = data_fields[1];
-      return new ErrMessage(message_id, displayname, message_contents);
+      return std::make_unique<ErrMessage>(message_id, displayname, message_contents);
     }
     case CODE_BYE:
     {
       uint16_t message_id = *(uint16_t *)generic_message;
       message_id = ntohs(message_id);
       generic_message += sizeof(uint16_t);
-      return new ByeMessage(message_id);
+      return std::make_unique<ByeMessage>(message_id);
     }
     default:
     {
       throw std::invalid_argument("Packet with unexpected code received.");
-      return new UnknownMessage(code);
+      return std::make_unique<UnknownMessage>(code);
     }
   }
 }

@@ -17,36 +17,34 @@ std::mutex addrinfo_mutex;
 
 volatile sender_state_t Sender::state;
 
-void Sender::send_msg(MessageWithId *msg)
+void Sender::send_msg(std::unique_ptr<MessageWithId> msg)
 {
   throw NotImplemented();
 }
 
 UDPSender::UDPSender(int _sock, struct addrinfo *_server_addrinfo, unsigned int _max_retr,
-                     std::chrono::milliseconds _timeout, Session *_session)
+                     std::chrono::milliseconds _timeout, Session &_session) : Sender(_session, _sock)
 {
-  sock = _sock;
   max_retr = _max_retr;
   state = STATE_IDLE;
   timeout = _timeout;
-  session = _session;
-  last_sent = new MessageWithId((message_code_t)0x77, 0);
+  last_sent = std::make_unique<MessageWithId>((message_code_t)0x77, 0);
   server_addrinfo = _server_addrinfo;
 }
 
-void UDPSender::notify_confirm(ConfirmMessage *msg)
+void UDPSender::notify_confirm(ConfirmMessage &msg)
 {
   std::lock_guard<std::mutex> lg(confirm_mutex);
 
   // Are we expecting a confirmation?
   if (state == STATE_WAITING) {
-    if (msg->get_ref_message_id() < last_sent->get_message_id()) {
+    if (msg.get_ref_message_id() < last_sent->get_message_id()) {
       // Must be a duplicate or out of order
       return;
-    } else if (msg->get_ref_message_id() == last_sent->get_message_id()) {
+    } else if (msg.get_ref_message_id() == last_sent->get_message_id()) {
       state = STATE_IDLE;
       confirm_cv.notify_one();
-    } else if (msg->get_ref_message_id() > last_sent->get_message_id()) {
+    } else if (msg.get_ref_message_id() > last_sent->get_message_id()) {
       state = STATE_SENDER_ERROR;
     }
   }
@@ -83,7 +81,7 @@ void UDPSender::confirm(uint16_t ref_message_id)
   }
 }
 
-void UDPSender::send_msg(MessageWithId *msg)
+void UDPSender::send_msg(std::unique_ptr<MessageWithId> msg)
 {
   std::string serialized = msg->serialize();
   std::unique_lock ul(confirm_mutex);
@@ -108,7 +106,7 @@ void UDPSender::send_msg(MessageWithId *msg)
     state = STATE_WAITING;
     // This condition is true when state == STATE_IDLE
     // (receiver already notified us of confirmation)
-    last_sent = msg;
+    last_sent = std::move(msg);
     if (confirm_cv.wait_for(ul, timeout,
                                     [] { return UDPSender::state != STATE_WAITING; }))
       {

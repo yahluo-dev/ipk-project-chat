@@ -17,7 +17,7 @@ const char *help =  "Usage:\n"
                     "\t/rename DISPLAYNAME - Change current display name.\n"
                     "\t/help - Show this message.\n";
 
-Session *Client::session;
+std::unique_ptr<Session> Client::session;
 bool Client::interrupted = false;
 
 void Client::ctrlc_handler(int signal)
@@ -25,7 +25,6 @@ void Client::ctrlc_handler(int signal)
   if (interrupted)
   {
     std::cout << "Force quitting." << std::endl;
-    delete session;
     exit(1);
   }
   interrupted = true;
@@ -34,9 +33,9 @@ void Client::ctrlc_handler(int signal)
   exit(0);
 }
 
-Client::Client(Session *_session)
+Client::Client(std::unique_ptr<Session> _session)
 {
-  session = _session;
+  session = std::move(_session);
 }
 
 void Client::print_prompt()

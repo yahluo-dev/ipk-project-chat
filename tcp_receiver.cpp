@@ -8,7 +8,7 @@
 
 std::string TCPReceiver::received_data;
 
-void TCPReceiver::receive(Session *session, int sock)
+void TCPReceiver::receive(Session &session, int sock)
 {
   ssize_t got_bytes;
   std::vector<std::string> messages;
@@ -38,15 +38,15 @@ void TCPReceiver::receive(Session *session, int sock)
     }
     catch (...)
     {
-      session->set_receiver_ex();
+      session.set_receiver_ex();
       return;
     }
 
     for (std::string &raw_message : messages)
     {
       TCPMessageFactory factory = TCPMessageFactory();
-      Message *parsed_message = factory.create(raw_message);
-      session->notify_incoming(parsed_message);
+      std::unique_ptr<Message> parsed_message = factory.create(raw_message);
+      session.notify_incoming(std::move(parsed_message));
     }
   }
 }

@@ -7,7 +7,8 @@
 #include <mutex>
 
 
-TCPSession::TCPSession(const std::string &hostname, const std::string& port) : Session(hostname)
+TCPSession::TCPSession(const std::string &hostname, const std::string& port)
+  : Session(hostname)
 {
   struct addrinfo hints = {0};
   int rv;
@@ -39,8 +40,8 @@ TCPSession::TCPSession(const std::string &hostname, const std::string& port) : S
     break;
   }
 
-  sender = new TCPSender(client_socket, this);
-  receiving_thread = std::jthread(TCPReceiver::receive, this, client_socket);
+  sender = std::make_unique<TCPSender>(client_socket, *this);
+  receiving_thread = std::jthread(TCPReceiver::receive, *this, client_socket);
 }
 
 void TCPSession::wait_for_reply()
@@ -51,17 +52,17 @@ void TCPSession::wait_for_reply()
   // Will wait indefinetely for a reply
 }
 
-void TCPSession::process_reply(ReplyMessage *reply)
+void TCPSession::process_reply(ReplyMessage &reply)
 {
-  if (reply->get_result() == 0)
+  if (reply.get_result() == 0)
   {
-    std::cerr << "Failure: " << reply->get_contents() << std::endl;
+    std::cerr << "Failure: " << reply.get_contents() << std::endl;
     state = STATE_START;
     return;
   }
   else
   {
-    std::cerr << "Success: " << reply->get_contents() << std::endl;
+    std::cerr << "Success: " << reply.get_contents() << std::endl;
     state = STATE_OPEN;
   }
 }

@@ -10,7 +10,7 @@ class UDPMessageFactory : public MessageFactory
   private:
     std::vector<std::string> parse_null_terminated_data(char *raw_data, int n_fields);
   public:
-    Message *create(const std::string &message) override;
+    std::unique_ptr<Message> create(const std::string &message) override;
 };
 
 #endif // UDP_MESSAGE_FACTORY_H

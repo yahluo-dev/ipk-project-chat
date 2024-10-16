@@ -32,21 +32,21 @@ enum session_state_t
   STATE_END
 };
 
-class Session
+class Session : public std::enable_shared_from_this<Session>
 {
 protected:
   static std::condition_variable inbox_cv;
   static std::mutex inbox_mutex;
   std::string username, secret, display_name, hostname;
-  Sender *sender;
+  std::unique_ptr<Sender> sender;
   int client_socket;
   uint16_t message_id;
   static session_state_t state;
-  static std::vector<Message *> inbox;
+  static std::vector<std::unique_ptr<Message>> inbox;
   std::exception_ptr receiver_ex;
 
   virtual void wait_for_reply() = 0;
-  virtual void process_reply(ReplyMessage *reply) = 0;
+  virtual void process_reply(ReplyMessage &reply) = 0;
 public:
   std::jthread receiving_thread;
 
@@ -63,7 +63,7 @@ public:
   virtual void bye();
 
   virtual void set_receiver_ex();
-  void notify_incoming(Message *message);
+  void notify_incoming(std::unique_ptr<Message> message);
 };
 
 #endif // SESSION_H

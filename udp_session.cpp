@@ -28,28 +28,28 @@ UDPSession::UDPSession(const std::string &_hostname, const std::string& port, un
 
     break;
   }
-  sender = new UDPSender(client_socket, server_addrinfo, _max_retr, timeout, this);
-  receiving_thread = std::jthread(UDPReceiver::receive, this, client_socket, dynamic_cast<UDPSender *>(sender));
+  sender = std::make_unique<UDPSender>(client_socket, server_addrinfo, _max_retr, timeout, *this);
+  receiving_thread = std::jthread(UDPReceiver::receive, *this, client_socket, dynamic_cast<UDPSender&>(*sender));
 }
 
-void UDPSession::process_reply(ReplyMessage *reply)
+void UDPSession::process_reply(ReplyMessage &reply)
 {
-  if (reply->get_ref_message_id() != message_id-1) // Does it match the previous message id?
+  if (reply.get_ref_message_id() != message_id-1) // Does it match the previous message id?
   {
     // It does not. Probably an error on the server side.
-    sender->send_msg(new ErrMessage(message_id++,
+    sender->send_msg(std::make_unique<ErrMessage>(message_id++,
                                     display_name, "Reply contains wrong ref_message_id!"));
     std::cout << "ERR: Reply contains wrong ref_message_id!" << std::endl;
     state = STATE_ERROR;
     return;
   }
-  else if (reply->get_result() == 0)
+  else if (reply.get_result() == 0)
   {
-    std::cerr << "Failure: " << reply->get_contents() << std::endl;
+    std::cerr << "Failure: " << reply.get_contents() << std::endl;
     state = STATE_START;
     return;
   }
-  std::cerr << "Success: " << reply->get_contents() << std::endl;
+  std::cerr << "Success: " << reply.get_contents() << std::endl;
   state = STATE_OPEN;
 }
 

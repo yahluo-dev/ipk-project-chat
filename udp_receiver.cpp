@@ -11,7 +11,7 @@
 
 #define RECVMESSAGE_MAXLEN 2048
 
-void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
+void UDPReceiver::receive(Session &session, int sock, UDPSender &sender)
 {
   char buffer[RECVMESSAGE_MAXLEN] = {0};
   struct msghdr msg = {0};
@@ -42,30 +42,30 @@ void UDPReceiver::receive(Session *session, int sock, UDPSender *sender)
     }
     catch (ConnectionFailed &e)
     {
-      session->set_receiver_ex();
+      session.set_receiver_ex();
       return;
     }
 
     char client_addr_str[INET_ADDRSTRLEN] = {0};
     inet_ntop(AF_INET, &client_addr.sin_addr, client_addr_str, INET_ADDRSTRLEN);
 
-    sender->update_addrinfo(std::string(client_addr_str), std::to_string(ntohs(client_addr.sin_port)));
+    sender.update_addrinfo(std::string(client_addr_str), std::to_string(ntohs(client_addr.sin_port)));
 
     std::string binary_message = std::string(buffer, got_bytes);
 
     UDPMessageFactory factory = UDPMessageFactory();
-    Message *parsed_message = factory.create(binary_message);
+    std::unique_ptr<Message> parsed_message = factory.create(binary_message);
 
     if (parsed_message->get_code() == CODE_CONFIRM)
     {
       debug_log("Got confirm.");
-      sender->notify_confirm(dynamic_cast<ConfirmMessage *>(parsed_message));
+      sender.notify_confirm(dynamic_cast<ConfirmMessage&>(*parsed_message));
     }
     else
     {
       debug_log("Got message.");
-      sender->confirm(dynamic_cast<MessageWithId *>(parsed_message)->get_message_id());
-      session->notify_incoming(parsed_message);
+      sender.confirm(dynamic_cast<MessageWithId&>(*parsed_message).get_message_id());
+      session.notify_incoming(std::move(parsed_message));
     }
   }
 }

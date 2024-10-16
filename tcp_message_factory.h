@@ -7,7 +7,7 @@
 class TCPMessageFactory : public MessageFactory
 {
 public:
-  Message *create(const std::string &message) override;
+  std::unique_ptr<Message> create(const std::string &message) override;
 };
 
 #endif // TCP_MESSAGE_FACTORY_H

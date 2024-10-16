@@ -10,8 +10,8 @@
 
 int main(int argc, char *argv[])
 {
-  Session *session;
-  Client *client;
+  std::unique_ptr<Session> session;
+  std::unique_ptr<Client> client;
 
   std::string port_number = DEFAULT_PORT;
   std::string server_hostname;
@@ -91,8 +91,8 @@ int main(int argc, char *argv[])
 
   try
   {
-    if (proto == UDP) session = new UDPSession(server_hostname, port_number, udp_max_retr, udp_timeout);
-    else if (proto == TCP) session = new TCPSession(server_hostname, port_number);
+    if (proto == UDP) session = std::make_unique<UDPSession>(server_hostname, port_number, udp_max_retr, udp_timeout);
+    else if (proto == TCP) session = std::make_unique<TCPSession>(server_hostname, port_number);
     else
     {
       std::cerr << "Either UDP or TCP must be supplied as the protocol." << std::endl;
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     std::cout << "Could not establish connection." << std::endl;
     return 1;
   }
-  client = new Client(session);
+  client = std::make_unique<Client>(std::move(session));
 
   try
   {

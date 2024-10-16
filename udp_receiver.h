@@ -8,7 +8,7 @@ class Session;
 class UDPReceiver
 {
 public:
-  static void receive(Session *session, int sock, UDPSender *sender);
+  static void receive(Session &session, int sock, UDPSender &sender);
 };
 
 #endif // UDP_RECEIVER_H

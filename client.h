@@ -14,12 +14,12 @@
 class Client
 {
 protected:
-  static Session *session;
+  static std::unique_ptr<Session> session;
   static bool interrupted;
   void print_prompt();
 public:
   void repl();
-  explicit Client(Session *_session);
+  explicit Client(std::unique_ptr<Session> _session);
   static void ctrlc_handler(int signal);
 };
 
